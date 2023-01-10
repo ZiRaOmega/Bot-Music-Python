@@ -3,8 +3,8 @@ import asyncio
 import os
 import discord
 import youtube_dl
-
-TOKEN = "MTAxNjA5NzI3Njk4MjIxNDc1Nw.GeScFR.Y-Vp-NipFtqSBeRX3udgdrDRM5c7ttcEw2M83A"
+#use env variables for token
+TOKEN = os.environ.get('DISCORD_TOKEN')
 
 client = discord.Client(intents=discord.Intents.all())
 
