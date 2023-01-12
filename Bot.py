@@ -7,6 +7,7 @@ import youtube_dl
 import pyjokes
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
+song_queue = []
 if TOKEN is None:
     print("No token found use export DISCORD_TOKEN='your_token'")
     exit()
@@ -27,7 +28,6 @@ ytdl_opts = {
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_opts)
-song_queue = []
 
 
 @client.event
@@ -37,7 +37,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    await HandleMessageEvent(message)
+    await HandleMessageEvent(message,song_queue)
     
 
 @client.event
@@ -59,14 +59,16 @@ async def DownloadVideo(url):
         # Download the video as file_name
         ytdl.download([url])
     else:
-        return None
+        return None,None
     print(file_name)
     return file_name,url
 
 
-async def play_song(vc, message, url):
+async def play_song(vc, message, url,channel):
     while len(song_queue) > 0:
         print(song_queue)
+        if not client.voice_clients:
+            vc = await channel.connect()
         x = song_queue[0]
         await message.channel.send('Playing ' + url)
         await ChangeStatus(x)
@@ -112,7 +114,8 @@ def fileNameFormatted(fileName):
     fileName = fileName.replace(".wmv","" )
     fileName = fileName.replace(".flv","" )
     return fileName
-async def HandleMessageEvent(message):
+
+async def HandleMessageEvent(message,song_queue):
     if message.author == client.user:
         return
 
@@ -143,20 +146,20 @@ async def HandleMessageEvent(message):
                     else:
                         await message.channel.send(url+' Added to queue')
                         return
-                    await play_song(vc, message,url)
+                    await play_song(vc, message,url,channel)
                 else:
                     if not client.voice_clients:
                         vc = await channel.connect()
                     else:
                         vc = client.voice_clients[0]
-                    await message.channel.send('Playing ' + url)
+                    await message.channel.send('Playing ' + file_name)
 
                     vc.play(discord.FFmpegPCMAudio(file_name))
                     while vc.is_playing():
                         await asyncio.sleep(1)
                     vc.stop()
                     # remove song from folder
-                    os.remove(file_name)
+                    #os.remove(file_name)
                     await vc.disconnect()
                     await DefaultStatus()
         else:
@@ -179,13 +182,24 @@ async def HandleMessageEvent(message):
         await message.channel.send("Downloaded " + url + "You can Now play it with !play " + url)
     elif message.content.startswith('!queue'):
         song_queueFormatted = ""
+        i=0
         for x in song_queue:
-            song_queueFormatted += x + "\n"
+            if i == 0:
+                song_queueFormatted += "Now Playing: "
+            song_queueFormatted +=str(i)+": "+ x + "\n"
+            i+=1
         await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
         for x in client.voice_clients:
             if (x.guild == message.guild):
-                x.stop()
+                if x.is_playing():
+                    x.stop()
+                    song_queue.pop(0)
+                    if len(song_queue) > 0:
+                        await play_song(x, message, song_queue[0],channel)
+                    else:
+                        await x.disconnect()
+                    await DefaultStatus()
                 """ song_queue.pop(0) """
                 break
     elif message.content.startswith('!pause'):
@@ -194,10 +208,19 @@ async def HandleMessageEvent(message):
                 x.pause()
                 break
     elif message.content.startswith('!resume'):
+        if len(song_queue) > 0:
+            if not client.voice_clients:
+                vc = await channel.connect()
+                await play_song(vc, message, song_queue[0],channel)
+            else:
+                for x in client.voice_clients:
+                    if (x.guild == message.guild):
+                        x.resume()
+                        break
+    elif message.content.startswith('!reset'):
         for x in client.voice_clients:
-            if (x.guild == message.guild):
-                x.resume()
-                break
+            await x.disconnect()
+        song_queue.clear()
     elif message.content.startswith('!help'):
         await message.channel.send('!play [url] - Plays the song from the url\n!stop - Stops the bot and clears the queue\n!download [url] - Downloads the song from the url\n!queue - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!help - Shows this message')
     elif message.content.startswith('!remove'):
@@ -280,8 +303,12 @@ async def HandleMessageEvent(message):
                 songs.append(file)
         random_song = random.choice(songs)
         await message.channel.send("Playing " + random_song)
-        #play song
-        await PlaySong(random_song,channel,message)
+        if len(song_queue) == 0:
+            song_queue.append(random_song)
+            await PlaySong(random_song,channel,message)
+        else:
+            song_queue.append(random_song)
+
             
 
 async def PlaySong(song_name,channel,message):
