@@ -118,8 +118,11 @@ def fileNameFormatted(fileName):
 async def HandleMessageEvent(message,song_queue):
     if message.author == client.user:
         return
-
-    channel = message.author.voice.channel
+    if message.author.voice is None:
+        channel = message.author.text_channel
+    else:
+        channel = message.author.voice.channel
+    
     if message.content.startswith('!play'):
         if channel:
             print(song_queue)
