@@ -1,4 +1,7 @@
 env.txt
 initToken.sh
 *.webm
-node_modules/*
+*.json
+joke.py
+*.txt
+node_modules/
