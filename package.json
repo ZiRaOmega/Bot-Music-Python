@@ -1,0 +1,22 @@
+{
+  "name": "botmusic",
+  "version": "1.0.0",
+  "description": "## Description This code is a Discord bot that can play music, tell jokes and manage a queue of songs to play.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZiRaOmega/Bot-Music-Python.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZiRaOmega/Bot-Music-Python/issues"
+  },
+  "homepage": "https://github.com/ZiRaOmega/Bot-Music-Python#readme",
+  "dependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
