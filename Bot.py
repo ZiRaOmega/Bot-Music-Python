@@ -9,7 +9,7 @@ import time
 import requests
 import urllib.parse
 import sys
-import lyricsfetcher
+import lyrics_fetcher
 ADMIN_MODE = True
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
