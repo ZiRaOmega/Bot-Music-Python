@@ -401,7 +401,7 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send(messer)
             EnterFuck01(UserName)
     elif message.content.startswith('!lyrics'):
-        lyrics=GetLyrics(CurrentSong)
+        lyrics=await GetLyrics(CurrentSong)
         await message.channel.send(lyrics)
         
 
