@@ -9,6 +9,7 @@ import time
 import requests
 import urllib.parse
 import sys
+import rauth
 ADMIN_MODE = True
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
@@ -35,7 +36,22 @@ ytdl_opts = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_opts)
 
-
+async def GetLyrics(song_name):
+    # Get the lyrics of the song using the genius api
+    api = rauth.OAuth1Service(
+        name='genius',
+        consumer_key=os.environ.get('GENIUS_CLIENT_ID'),
+        consumer_secret=os.environ.get('GENIUS_CLIENT_SECRET'),
+        request_token_url='https://api.genius.com/oauth/authorize',
+        access_token_url='https://api.genius.com/oauth/token',
+        authorize_url='https://api.genius.com/oauth/authorize',
+        base_url='https://api.genius.com'
+    )
+    params = {'q': song_name}
+    request = api.get('search', params=params)
+    response = request.json()
+    song_url = response['response']['hits'][0]['result']['url']
+    return song_url
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
@@ -129,8 +145,9 @@ def fileNameFormatted(fileName):
     fileName = fileName.replace(".flv", "")
     return fileName
 
-
+CurrentSong = None
 async def HandleMessageEvent(message, song_queue):
+    global CurrentSong
     if message.author == client.user:
         return
     if message.author.voice is not None:
@@ -154,6 +171,7 @@ async def HandleMessageEvent(message, song_queue):
                     return
                 await message.channel.send('Downloaded ' + url)
             song_queue.append(file_name)
+            CurrentSong = file_name
             if os.path.exists(file_name):
                 if len(song_queue) > 0:
                     # if bot not connected to voice channel
@@ -382,6 +400,10 @@ async def HandleMessageEvent(message, song_queue):
         else:
             await message.channel.send(messer)
             EnterFuck01(UserName)
+    elif message.content.startswith('!lyrics'):
+        lyrics=GetLyrics(CurrentSong)
+        await message.channel.send(lyrics)
+        
 
 
 async def PlaySong(song_name, channel, message):
