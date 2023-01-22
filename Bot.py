@@ -9,7 +9,7 @@ import time
 import requests
 import urllib.parse
 import sys
-import rauth
+import lyricsfetcher
 ADMIN_MODE = True
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
@@ -38,20 +38,10 @@ ytdl = youtube_dl.YoutubeDL(ytdl_opts)
 
 async def GetLyrics(song_name):
     # Get the lyrics of the song using the genius api
-    api = rauth.OAuth1Service(
-        name='genius',
-        consumer_key=os.environ.get('GENIUS_CLIENT_ID'),
-        consumer_secret=os.environ.get('GENIUS_CLIENT_SECRET'),
-        request_token_url='https://api.genius.com/oauth/authorize',
-        access_token_url='https://api.genius.com/oauth/token',
-        authorize_url='https://api.genius.com/oauth/authorize',
-        base_url='https://api.genius.com'
-    )
-    params = {'q': song_name}
-    request = api.get('search', params=params)
-    response = request.json()
-    song_url = response['response']['hits'][0]['result']['url']
-    return song_url
+    lyrics_fetcher.set_access_token(os.environ.get('GENIUS_TOKEN'))
+    lyrics = lyrics_fetcher.get_lyrics(song_name)
+    return lyrics
+#print(GetLyrics("The Weeknd - Blinding Lights"))
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
