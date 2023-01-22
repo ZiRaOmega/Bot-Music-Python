@@ -150,7 +150,7 @@ async def HandleMessageEvent(message, song_queue):
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
 
-    if message.content.startswith('!play'):
+    if message.content.startswith('!play') or message.content.startswith('!p'):
         if channel:
             print(song_queue)
             print(message.content[6:])
@@ -194,23 +194,23 @@ async def HandleMessageEvent(message, song_queue):
                     await DefaultStatus()
         else:
             await message.channel.send('You are not connected to a voice channel')
-    elif message.content.startswith('!stop'):
+    elif message.content.startswith('!stop') or message.content.startswith('!s'):
         for x in client.voice_clients:
             if (x.guild == message.guild):
-                await x.disconnect()
+                await x.pause()
                 break
         for file_name in song_queue:
             os.remove(file_name)
         song_queue.clear()
         await DefaultStatus()
-    elif message.content.startswith('!download'):
+    elif message.content.startswith('!download') or message.content.startswith('!d'):
         url = message.content[10:]
         file_name, url = await DownloadVideo(url)
         if file_name is None:
             await message.channel.send('Could not find ' + url)
             return
         await message.channel.send("Downloaded " + url + "You can Now play it with !play " + url)
-    elif message.content.startswith('!queue'):
+    elif message.content.startswith('!queue') or message.content.startswith('!q'):
         song_queueFormatted = ""
         i = 0
         for x in song_queue:
