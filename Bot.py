@@ -75,7 +75,10 @@ async def DownloadVideo(url):
         return file_name, url
     elif len(info) > 0:
         # Download the video as file_name
-        ytdl.download([url])
+        try:
+            ytdl.download([url])
+        except:
+            ytdl.download([url])
     else:
         return None, None
     print(file_name)
@@ -110,7 +113,10 @@ def search_and_download_music(song_name):
             return file_name, url
         else:
             # Download the video as file_name
-            ydl.download(["ytsearch:" + song_name])
+            try:
+                ydl.download(["ytsearch:" + song_name])
+            except:
+                ydl.download(["ytsearch:" + song_name])
             print(file_name)
             return file_name, url
 
