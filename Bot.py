@@ -210,8 +210,8 @@ async def HandleMessageEvent(message, song_queue):
             if (x.guild == message.guild):
                 if x.is_playing():
                     x.stop()
-                    song_queue.pop(0)
                     if len(song_queue) > 0:
+                        song_queue.pop(0)
                         await play_song(x, message, song_queue[0], channel)
                     else:
                         await x.disconnect()
