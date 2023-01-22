@@ -157,7 +157,7 @@ async def HandleMessageEvent(message, song_queue):
             url = message.content[6:]
             # check if url is url or search term
             if not url.startswith('http') or not url.startswith('https'):
-                await message.channel.send('Searching for ' + url)
+                await message.channel.send('Downloading ' + url)
                 file_name, url = search_and_download_music(url)
                 await message.channel.send('Found ' + url)
             else:
