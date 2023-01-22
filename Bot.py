@@ -9,7 +9,7 @@ import time
 import requests
 import urllib.parse
 import sys
-import lyrics_fetcher
+""" import lyrics_fetcher """
 ADMIN_MODE = True
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
@@ -36,11 +36,11 @@ ytdl_opts = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_opts)
 
-async def GetLyrics(song_name):
+""" async def GetLyrics(song_name):
     # Get the lyrics of the song using the genius api
     lyrics_fetcher.set_access_token(os.environ.get('GENIUS_TOKEN'))
     lyrics = lyrics_fetcher.get_lyrics(song_name)
-    return lyrics
+    return lyrics """
 #print(GetLyrics("The Weeknd - Blinding Lights"))
 @client.event
 async def on_ready():
