@@ -90,6 +90,7 @@ async def play_song(vc, message, url, channel):
         vc.stop()
         song_queue.pop(0)
     await vc.disconnect()
+    await DefaultStatus()
 
 
 def search_and_download_music(song_name):
@@ -155,7 +156,6 @@ async def HandleMessageEvent(message, song_queue):
             song_queue.append(file_name)
             if os.path.exists(file_name):
                 if len(song_queue) > 0:
-                    # NEED RECURSION HERE
                     # if bot not connected to voice channel
                     if not client.voice_clients:
                         vc = await channel.connect()
