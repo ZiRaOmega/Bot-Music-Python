@@ -254,7 +254,7 @@ async def HandleMessageEvent(message, song_queue):
             await x.disconnect()
         song_queue.clear()
     elif message.content.startswith('!help'):
-        await message.channel.send('!play [url] - Plays the song from the url\n!stop - Stops the bot and clears the queue\n!download [url] - Downloads the song from the url\n!queue - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!help - Shows this message\n!alredydl - Print all files already downloaded\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!reset - Resets the bot')
+        await message.channel.send('!play or !p [url] - Plays the song from the url\n!stop - Stops the bot and clears the queue\n!download [url] - Downloads the song from the url\n!queue - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!help - Shows this message\n!alredydl - Print all files already downloaded\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!reset - Resets the bot')
     elif message.content.startswith('!remove'):
         songToRemove = message.content[8:]
         if songToRemove in song_queue:
