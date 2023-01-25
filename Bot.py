@@ -401,7 +401,7 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!restart'):
         #restart the bot
         await message.channel.send("Restarting...")
-        os.system("python3 Bot.py")
+        os.system("bash restart.sh")
         sys.exit() 
         
         
