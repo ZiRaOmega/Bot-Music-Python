@@ -153,6 +153,8 @@ async def HandleMessageEvent(message, song_queue):
     if message.content.startswith('!play') or message.content.startswith('!p'):
         if channel:
             print(song_queue)
+            if message.content.startswith('!p'):
+                message.content = '!play' + message.content[2:]
             print(message.content[6:])
             url = message.content[6:]
             # check if url is url or search term
