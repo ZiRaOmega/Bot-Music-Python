@@ -2,6 +2,7 @@
 import asyncio
 import os
 import random
+import subprocess
 import discord
 import youtube_dl
 import praw
@@ -401,7 +402,8 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!restart'):
         #restart the bot
         await message.channel.send("Restarting...")
-        os.system("bash restart.sh")
+        #os.system("bash restart.sh") using subprocess
+        subprocess.Popen(["bash", "restart.sh"])
         sys.exit() 
         
         
