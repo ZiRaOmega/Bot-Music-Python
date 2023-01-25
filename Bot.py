@@ -398,9 +398,12 @@ async def HandleMessageEvent(message, song_queue):
         else:
             await message.channel.send(messer)
             EnterFuck01(UserName)
-    elif message.content.startswith('!lyrics'):
-        lyrics=await GetLyrics(CurrentSong)
-        await message.channel.send(lyrics)
+    elif message.content.startswith('!restart'):
+        #restart the bot
+        await message.channel.send("Restarting...")
+        os.system("python3 Bot.py")
+        sys.exit() 
+        
         
 
 
