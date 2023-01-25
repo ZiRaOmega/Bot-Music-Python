@@ -404,7 +404,7 @@ async def HandleMessageEvent(message, song_queue):
         await message.channel.send("Restarting...")
         #os.system("bash restart.sh") using subprocess
         subprocess.Popen(["bash", "restart.sh"])
-        sys.exit() 
+        exit()
         
         
 
