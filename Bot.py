@@ -145,16 +145,17 @@ def fileNameFormatted(fileName):
 CurrentSong = None
 async def HandleMessageEvent(message, song_queue):
     global CurrentSong
+    channel=None
     if message.author == client.user:
         return
     if message.author.voice is not None:
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
 
-    if message.content.startswith('!play') or message.content.startswith('!p'):
-        if channel:
+    if message.content.startswith('!play') or message.content.startswith('!p '):
+        if channel!=None:
             print(song_queue)
-            if message.content.startswith('!p'):
+            if message.content.startswith('!p '):
                 message.content = '!play' + message.content[2:]
             print(message.content[6:])
             url = message.content[6:]
@@ -329,8 +330,9 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!invite'):
         await message.channel.send("https://discord.com/api/oauth2/authorize?client_id=765308076500254730&permissions=8&scope=bot")
     elif message.content.startswith('!joke'):
-        Joke = JokefromReddit()
-        await message.channel.send(Joke)
+        Joke = await JokefromReddit()
+        toPrint = Joke.baseurl+"\n"+Joke.title + "\n"+ Joke.body + "\n" + Joke.url
+        await message.channel.send(toPrint)
     elif message.content.startswith('!random'):
         songs = []
         for file in os.listdir():
@@ -405,6 +407,47 @@ async def HandleMessageEvent(message, song_queue):
         #os.system("bash restart.sh") using subprocess
         subprocess.Popen(["bash", "restart.sh"])
         exit()
+    elif message.content.startswith('!createpl'):
+        playlist_name = message.content[10:]
+        #Create file like playlist_name_playlist.txt
+        file = open(playlist_name+"_playlist.txt", "w")
+        file.close()
+    elif message.content.startswith('!addtopl'):
+        query = message.content.split(" ")
+        if len(query) < 3:
+            await message.channel.send("Please enter a playlist name and a song name")
+            return
+        playlist_name = query[1]
+        query.pop(0)
+        query.pop(0)
+        #Join the query to get the song name
+        song_name = " ".join(query)
+        #Open file like playlist_name_playlist.txt if not exist create it
+        file = open(playlist_name+"_playlist.txt", "a")
+        file.write(song_name+"\n")
+        file.close()
+    elif message.content.startswith('!pl'):
+        playlist_name= message.content[4:]
+        #Open file like playlist_name_playlist.txt if not exist create it
+        file = open(playlist_name+"_playlist.txt", "r")
+        for line in file:
+            print(line)
+            song_name = line.strip() # remove \n
+            song_name,url = search_and_download_music(song_name)
+            song_queue.append(song_name)
+        file.close()
+        if len(song_queue) == 0:
+            await message.channel.send("Playlist is empty")
+            return
+        else:
+            if not client.voice_clients:
+                vc = await channel.connect()
+            else:
+                vc = client.voice_clients[0]
+            await play_song(vc, message, song_queue[0],channel)
+            await message.channel.send("Playlist Ended")
+
+        
         
         
 
@@ -441,8 +484,13 @@ def GetPassword(username):
 def StartBot(TOKEN):
     client.run(TOKEN)
 
-
-def JokefromReddit():
+class Jokes:
+    def __init__(self, title, url, body, baseurl):
+        self.title = title
+        self.url = url
+        self.body = body
+        self.baseurl = baseurl
+async def JokefromReddit():
     # connect to reddit
     reddit = praw.Reddit(client_id='paXC2ZsdM_2-uGDNyoerNw',
                          client_secret='uC79rgQmD-xrF0lpGT-Cd5opFVEvcQ',
@@ -452,7 +500,8 @@ def JokefromReddit():
     joke = jokes.hot(limit=30)
     jokes = []
     for element in joke:
-        jokes.append(element.url)
+        joke = Jokes(element.title, element.url, element.selftext, element.link_flair_text)
+        jokes.append(joke)
     # Random choose a jokes in a list
     num = random.randint(0, len(jokes)-1)
     for i in range(num):
