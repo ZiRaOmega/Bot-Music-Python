@@ -42,7 +42,9 @@ ytdl = youtube_dl.YoutubeDL(ytdl_opts)
     lyrics_fetcher.set_access_token(os.environ.get('GENIUS_TOKEN'))
     lyrics = lyrics_fetcher.get_lyrics(song_name)
     return lyrics """
-#print(GetLyrics("The Weeknd - Blinding Lights"))
+# print(GetLyrics("The Weeknd - Blinding Lights"))
+
+
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
@@ -142,10 +144,13 @@ def fileNameFormatted(fileName):
     fileName = fileName.replace(".flv", "")
     return fileName
 
+
 CurrentSong = None
+
+
 async def HandleMessageEvent(message, song_queue):
     global CurrentSong
-    channel=None
+    channel = None
     if message.author == client.user:
         return
     if message.author.voice is not None:
@@ -153,7 +158,7 @@ async def HandleMessageEvent(message, song_queue):
         channel = message.author.voice.channel
 
     if message.content.startswith('!play') or message.content.startswith('!p '):
-        if channel!=None:
+        if channel != None:
             print(song_queue)
             if message.content.startswith('!p '):
                 message.content = '!play' + message.content[2:]
@@ -331,7 +336,7 @@ async def HandleMessageEvent(message, song_queue):
         await message.channel.send("https://discord.com/api/oauth2/authorize?client_id=765308076500254730&permissions=8&scope=bot")
     elif message.content.startswith('!joke'):
         Joke = await JokefromReddit()
-        toPrint = Joke.baseurl+"\n"+Joke.title + "\n"+ Joke.body + "\n" + Joke.url
+        toPrint = Joke.baseurl+"\n"+Joke.title + "\n" + Joke.body + "\n" + Joke.url
         await message.channel.send(toPrint)
     elif message.content.startswith('!random'):
         songs = []
@@ -373,13 +378,11 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Please enter a username")
             return
         UserName = message.content[8:]
-        Move=SwitchDoor(True)
+        Move = SwitchDoor(True)
         print("Move: "+str(Move))
-        
-        
 
     elif message.content.startswith('!love01'):
-        
+
         # ping 10.10.0.30 if down return
         ping = os.system("ping -c 1 10.10.0.30")
         if ping != 0:
@@ -392,24 +395,24 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Please enter a username")
             return
         UserName = message.content[8:]
-        errORsession,messer=login(UserName)
-        if err!="Error":
-            err=None
-        elif err=="Error":
+        errORsession, messer = login(UserName)
+        if err != "Error":
+            err = None
+        elif err == "Error":
             await message.channel.send(messer)
             return
         else:
             await message.channel.send(messer)
             EnterFuck01(UserName)
     elif message.content.startswith('!restart'):
-        #restart the bot
+        # restart the bot
         await message.channel.send("Restarting...")
-        #os.system("bash restart.sh") using subprocess
+        # os.system("bash restart.sh") using subprocess
         subprocess.Popen(["bash", "restart.sh"])
         exit()
     elif message.content.startswith('!createpl'):
         playlist_name = message.content[10:]
-        #Create file like playlist_name_playlist.txt
+        # Create file like playlist_name_playlist.txt
         file = open(playlist_name+"_playlist.txt", "w")
         file.close()
     elif message.content.startswith('!addtopl'):
@@ -420,20 +423,20 @@ async def HandleMessageEvent(message, song_queue):
         playlist_name = query[1]
         query.pop(0)
         query.pop(0)
-        #Join the query to get the song name
+        # Join the query to get the song name
         song_name = " ".join(query)
-        #Open file like playlist_name_playlist.txt if not exist create it
+        # Open file like playlist_name_playlist.txt if not exist create it
         file = open(playlist_name+"_playlist.txt", "a")
         file.write(song_name+"\n")
         file.close()
     elif message.content.startswith('!pl'):
-        playlist_name= message.content[4:]
-        #Open file like playlist_name_playlist.txt if not exist create it
+        playlist_name = message.content[4:]
+        # Open file like playlist_name_playlist.txt if not exist create it
         file = open(playlist_name+"_playlist.txt", "r")
         for line in file:
             print(line)
-            song_name = line.strip() # remove \n
-            song_name,url = search_and_download_music(song_name)
+            song_name = line.strip()  # remove \n
+            song_name, url = search_and_download_music(song_name)
             song_queue.append(song_name)
         file.close()
         if len(song_queue) == 0:
@@ -444,12 +447,13 @@ async def HandleMessageEvent(message, song_queue):
                 vc = await channel.connect()
             else:
                 vc = client.voice_clients[0]
-            await play_song(vc, message, song_queue[0],channel)
+            await play_song(vc, message, song_queue[0], channel)
             await message.channel.send("Playlist Ended")
-
-        
-        
-        
+    elif message.content.startswith('!rmpl'):
+        playlist_name = message.content[6:]
+        # Remove file like playlist_name_playlist.txt
+        os.remove(playlist_name+"_playlist.txt")
+        await message.channel.send("Playlist removed")
 
 
 async def PlaySong(song_name, channel, message):
@@ -484,12 +488,15 @@ def GetPassword(username):
 def StartBot(TOKEN):
     client.run(TOKEN)
 
+
 class Jokes:
     def __init__(self, title, url, body, baseurl):
         self.title = title
         self.url = url
         self.body = body
         self.baseurl = baseurl
+
+
 async def JokefromReddit():
     # connect to reddit
     reddit = praw.Reddit(client_id='paXC2ZsdM_2-uGDNyoerNw',
@@ -500,7 +507,8 @@ async def JokefromReddit():
     joke = jokes.hot(limit=30)
     jokes = []
     for element in joke:
-        joke = Jokes(element.title, element.url, element.selftext, element.link_flair_text)
+        joke = Jokes(element.title, element.url,
+                     element.selftext, element.link_flair_text)
         jokes.append(joke)
     # Random choose a jokes in a list
     num = random.randint(0, len(jokes)-1)
@@ -519,16 +527,17 @@ ADMIN = None
 URL = "http://10.10.0.30/"
 URL = "http://localhost:3000/"
 
+
 def login(username=None):
     password = GetPassword(username)
-    global Pseudo01 #global variable to be used in the function and outside the function
+    global Pseudo01  # global variable to be used in the function and outside the function
     global Password01
     global ADMIN
     if Pseudo01 != None and Password01 != None and ADMIN == None:
         ADMIN = "Connected"
         Pseudo01 = None
-        Password01 = None 
-        return session.get(URL+"sign_z01/PHP/sign.php?" + urllib.parse.urlencode({ #login to the website with the credentials in the ZONE01.txt file return is used to check if the login is successful and end the function
+        Password01 = None
+        return session.get(URL+"sign_z01/PHP/sign.php?" + urllib.parse.urlencode({  # login to the website with the credentials in the ZONE01.txt file return is used to check if the login is successful and end the function
             "pseudo": Pseudo01,
             "password": Password01,
             "submit": "Connexion",
@@ -545,24 +554,23 @@ def login(username=None):
     elif username == None or password == None:
         return "Error", "Please ask an admin to add your credentials in the ZONE01.txt file"
 
-def SwitchDoor(PushTRUEorPullFALSE): #Enter (alias Push) or Exit (alias Pull)
-    #switch PushTRUEorPullFALSE to 1 or 0
-        #ping 10.10.0.30 if down return
+
+def SwitchDoor(PushTRUEorPullFALSE):  # Enter (alias Push) or Exit (alias Pull)
+    # switch PushTRUEorPullFALSE to 1 or 0
+    # ping 10.10.0.30 if down return
     ping = os.system("ping -c 1 10.10.0.30")
-    if PushTRUEorPullFALSE=="ENTER":
+    if PushTRUEorPullFALSE == "ENTER":
         if ping != 0:
             return "Door is locked"
         else:
             EnterFuck01()
-    elif PushTRUEorPullFALSE=="EXIT":
-        if ping!=0:
+    elif PushTRUEorPullFALSE == "EXIT":
+        if ping != 0:
             print()
         else:
             ExitLove01()
-        
-        
-        
-    
+
+
 def logout():
     session.get(URL+"sign_z01/PHP/deco.php")
 
