@@ -429,6 +429,7 @@ async def HandleMessageEvent(message, song_queue):
         file = open(playlist_name+"_playlist.txt", "a")
         file.write(song_name+"\n")
         file.close()
+        await message.channel.send("Added "+song_name+" to "+playlist_name)
     elif message.content.startswith('!pl'):
         playlist_name = message.content[4:]
         # Open file like playlist_name_playlist.txt if not exist create it
@@ -447,6 +448,7 @@ async def HandleMessageEvent(message, song_queue):
                 vc = await channel.connect()
             else:
                 vc = client.voice_clients[0]
+            await message.channel.send("Playing playlist "+playlist_name)
             await play_song(vc, message, song_queue[0], channel)
             await message.channel.send("Playlist Ended")
     elif message.content.startswith('!rmpl'):
