@@ -96,7 +96,7 @@ async def play_song(vc, message, url, channel):
         if not client.voice_clients:
             vc = await channel.connect()
         x = song_queue[0]
-        await message.channel.send(':play_pause: Playing ' + url)
+        await message.channel.send(':play_pause: Playing ' + x[:(len(x) - 5)])
         await ChangeStatus(x)
         vc.play(discord.FFmpegPCMAudio(x))
         while vc.is_playing() or vc.is_paused():
@@ -192,10 +192,7 @@ async def HandleMessageEvent(message, song_queue):
                         return
                     await play_song(vc, message, url, channel)
                 else:
-                    if not client.voice_clients:
-                        vc = await channel.connect()
-                    else:
-                        vc = client.voice_clients[0]
+                    vc = await GetVocalClient(client,channel, message)
                     await message.channel.send(':arrow_forward: Playing ' + file_name)
 
                     vc.play(discord.FFmpegPCMAudio(file_name))
@@ -231,11 +228,14 @@ async def HandleMessageEvent(message, song_queue):
         i = 0
         for x in song_queue:
             if i == 0:
-                song_queueFormatted += "Now Playing: \n"
+                song_queueFormatted += "Now Playing: "+x+"\n"
+                i+=1
+                continue
             song_queueFormatted += str(i)+": " + x + "\n"
             i += 1
         await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
+        await message.delete()
         for x in client.voice_clients:
             if (x.guild == message.guild):
                 if x.is_playing():
@@ -247,12 +247,14 @@ async def HandleMessageEvent(message, song_queue):
                 """ song_queue.pop(0) """
                 break
     elif message.content.startswith('!pause'):
+        await message.delete()
         for x in client.voice_clients:
             if (x.guild == message.guild):
                 x.pause()
                 break
         await message.channel.send(':pause_button: Paused')
     elif message.content.startswith('!resume'):
+        await message.delete()
         if len(song_queue) > 0:
             if not client.voice_clients:
                 vc = await channel.connect()
@@ -266,6 +268,7 @@ async def HandleMessageEvent(message, song_queue):
         else:
             await message.channel.send('Queue is empty')
     elif message.content.startswith('!reset'):
+        await message.delete()
         for x in client.voice_clients:
             await x.disconnect()
         song_queue.clear()
@@ -288,7 +291,10 @@ async def HandleMessageEvent(message, song_queue):
         song_queue.clear()
         await message.channel.send("Cleared queue")
     elif message.content.startswith('!shuffle'):
+        current_song=song_queue[0]
+        song_queue.pop(0)
         random.shuffle(song_queue)
+        song_queue.insert(0,current_song)
         await message.channel.send("Shuffled queue")
     elif message.content.startswith('!alredydl'):
         result = ""
@@ -440,6 +446,7 @@ async def HandleMessageEvent(message, song_queue):
         file.close()
         await message.channel.send("Added "+song_name+" to "+playlist_name)
     elif message.content.startswith('!pl '):
+        plsong_queue = []
         playlist_name = message.content[4:]
         # Open file like playlist_name_playlist.txt if not exist create it
         file = open(playlist_name+"_playlist.txt", "r")
@@ -448,16 +455,19 @@ async def HandleMessageEvent(message, song_queue):
             song_name = line.strip()  # remove \n
             song_name, url = search_and_download_music(song_name)
             song_queue.append(song_name)
+            plsong_queue.append(song_name)
         file.close()
-        if len(song_queue) == 0:
+        if len(plsong_queue) == 0:
             await message.channel.send("Playlist is empty")
             return
         else:
-            if not client.voice_clients:
-                vc = await channel.connect()
-            else:
-                vc = client.voice_clients[0]
+            vc=await GetVocalClient(client,channel,message)
             await message.channel.send("Playing playlist "+playlist_name)
+            while len(plsong_queue) > 0:
+                await message.channel.send("Playing "+plsong_queue[0])
+                await PlayUniqueSong(vc, plsong_queue[0])
+                plsong_queue.pop(0)
+                song_queue.pop(0)
             await play_song(vc, message, song_queue[0], channel)
             await message.channel.send("Playlist Ended")
     elif message.content.startswith('!rmpl'):
@@ -492,13 +502,7 @@ async def HandleMessageEvent(message, song_queue):
             return
         else:
             await message.channel.send("Playing "+song_queue[0])
-            if not client.voice_clients:
-                vc = await channel.connect()
-            else:
-                for x in client.voice_clients:
-                    if (x.guild == message.guild):
-                        vc = x
-                        break
+            vc=await GetVocalClient(client, channel,message)
             await play_song(vc, message, song_queue[0], channel)
     elif message.content==('!history'):
         History = ReadHistoryFile()
@@ -506,7 +510,22 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content==('!createhistory'):
         CreateHistoryFile()
         await message.channel.send("History file created")
-
+        
+async def PlayUniqueSong(vc, song_name):
+        vc.play(discord.FFmpegPCMAudio(song_name))
+        while vc.is_playing() or vc.is_paused():
+            await asyncio.sleep(1)
+        vc.stop()
+          
+async def GetVocalClient(client, channel,message):
+    if not client.voice_clients:
+        vc = await channel.connect()
+    else:
+        for x in client.voice_clients:
+            if (x.guild == message.guild):
+                vc = x
+                break
+    return vc
 
 def CreateHistoryFile():
     # Create a file called history.txt if not exist
@@ -546,8 +565,6 @@ async def PlaySong(song_name, channel, message):
                 vc = x
                 break
     vc.play(discord.FFmpegPCMAudio(song_name))
-    vc.source = discord.PCMVolumeTransformer(vc.source)
-    vc.source.volume = 0.5
     while vc.is_playing():
         await asyncio.sleep(1)
     # song finished
