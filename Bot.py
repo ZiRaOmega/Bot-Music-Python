@@ -157,7 +157,7 @@ async def HandleMessageEvent(message, song_queue):
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
 
-    if message.content.startswith('!play') or message.content.startswith('!p '):
+    if message.content.startswith('!play ') or message.content.startswith('!p '):
         if channel != None:
             print(song_queue)
             if message.content.startswith('!p '):
@@ -256,6 +256,8 @@ async def HandleMessageEvent(message, song_queue):
                     if (x.guild == message.guild):
                         x.resume()
                         break
+        else:
+            await message.channel.send('Queue is empty')
     elif message.content.startswith('!reset'):
         for x in client.voice_clients:
             await x.disconnect()
@@ -430,7 +432,7 @@ async def HandleMessageEvent(message, song_queue):
         file.write(song_name+"\n")
         file.close()
         await message.channel.send("Added "+song_name+" to "+playlist_name)
-    elif message.content.startswith('!pl'):
+    elif message.content.startswith('!pl '):
         playlist_name = message.content[4:]
         # Open file like playlist_name_playlist.txt if not exist create it
         file = open(playlist_name+"_playlist.txt", "r")
@@ -456,6 +458,21 @@ async def HandleMessageEvent(message, song_queue):
         # Remove file like playlist_name_playlist.txt
         os.remove(playlist_name+"_playlist.txt")
         await message.channel.send("Playlist removed")
+    elif message.content.startswith('!playforce'):
+        if len(song_queue) == 0:
+            await message.channel.send("Queue is empty")
+            return
+        else:
+            await message.channel.send("Playing "+song_queue[0])
+            if not client.voice_clients:
+                vc = await channel.connect()
+            else:
+                for x in client.voice_clients:
+                    if (x.guild == message.guild):
+                        vc = x
+                        break
+            await play_song(vc, message, song_queue[0], channel)
+            
 
 
 async def PlaySong(song_name, channel, message):
