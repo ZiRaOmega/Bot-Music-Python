@@ -1,5 +1,6 @@
 
 import asyncio
+import datetime
 import os
 import random
 import subprocess
@@ -90,6 +91,7 @@ async def DownloadVideo(url):
 
 async def play_song(vc, message, url, channel):
     while len(song_queue) > 0:
+        
         print(song_queue)
         if not client.voice_clients:
             vc = await channel.connect()
@@ -97,7 +99,7 @@ async def play_song(vc, message, url, channel):
         await message.channel.send('Playing ' + url)
         await ChangeStatus(x)
         vc.play(discord.FFmpegPCMAudio(x))
-        while vc.is_playing():
+        while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(1)
         vc.stop()
         song_queue.pop(0)
@@ -158,12 +160,15 @@ async def HandleMessageEvent(message, song_queue):
         channel = message.author.voice.channel
 
     if message.content.startswith('!play ') or message.content.startswith('!p '):
+        CreateHistoryFile()
         if channel != None:
             print(song_queue)
             if message.content.startswith('!p '):
                 message.content = '!play' + message.content[2:]
             print(message.content[6:])
             url = message.content[6:]
+            username = message.author.name
+            WriteHistoryFile(url, username)
             # check if url is url or search term
             if not url.startswith('http') or not url.startswith('https'):
                 await message.channel.send('Downloading ' + url)
@@ -174,7 +179,7 @@ async def HandleMessageEvent(message, song_queue):
                 if file_name is None:
                     await message.channel.send('Could not find ' + url)
                     return
-                await message.channel.send('Downloaded ' + url)
+                await message.channel.send(':magnet: Downloaded ' + url)
             song_queue.append(file_name)
             CurrentSong = file_name
             if os.path.exists(file_name):
@@ -191,7 +196,7 @@ async def HandleMessageEvent(message, song_queue):
                         vc = await channel.connect()
                     else:
                         vc = client.voice_clients[0]
-                    await message.channel.send('Playing ' + file_name)
+                    await message.channel.send(':arrow_forward: Playing ' + file_name)
 
                     vc.play(discord.FFmpegPCMAudio(file_name))
                     while vc.is_playing():
@@ -202,8 +207,8 @@ async def HandleMessageEvent(message, song_queue):
                     await vc.disconnect()
                     await DefaultStatus()
         else:
-            await message.channel.send('You are not connected to a voice channel')
-    elif message.content.startswith('!stop') or message.content.startswith('!s'):
+            await message.channel.send(':negative_squared_cross_mark: You are not connected to a voice channel')
+    elif message.content.startswith('!stop') or message.content.startswith('!s '):
         for x in client.voice_clients:
             if (x.guild == message.guild):
                 await x.pause()
@@ -212,19 +217,19 @@ async def HandleMessageEvent(message, song_queue):
             os.remove(file_name)
         song_queue.clear()
         await DefaultStatus()
-    elif message.content.startswith('!download') or message.content.startswith('!d'):
+    elif message.content.startswith('!download') or message.content.startswith('!d '):
         url = message.content[10:]
         file_name, url = await DownloadVideo(url)
         if file_name is None:
             await message.channel.send('Could not find ' + url)
             return
-        await message.channel.send("Downloaded " + url + "You can Now play it with !play " + url)
-    elif message.content.startswith('!queue') or message.content.startswith('!q'):
+        await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
+    elif message.content.startswith('!queue') or message.content.startswith('!q '):
         song_queueFormatted = ""
         i = 0
         for x in song_queue:
             if i == 0:
-                song_queueFormatted += "Now Playing: "
+                song_queueFormatted += "Now Playing: \n"
             song_queueFormatted += str(i)+": " + x + "\n"
             i += 1
         await message.channel.send(song_queueFormatted)
@@ -246,6 +251,7 @@ async def HandleMessageEvent(message, song_queue):
             if (x.guild == message.guild):
                 x.pause()
                 break
+        await message.channel.send(':pause_button: Paused')
     elif message.content.startswith('!resume'):
         if len(song_queue) > 0:
             if not client.voice_clients:
@@ -256,6 +262,7 @@ async def HandleMessageEvent(message, song_queue):
                     if (x.guild == message.guild):
                         x.resume()
                         break
+            await message.channel.send(':arrow_forward: Resumed')
         else:
             await message.channel.send('Queue is empty')
     elif message.content.startswith('!reset'):
@@ -458,6 +465,27 @@ async def HandleMessageEvent(message, song_queue):
         # Remove file like playlist_name_playlist.txt
         os.remove(playlist_name+"_playlist.txt")
         await message.channel.send("Playlist removed")
+    elif message.content==('!pllist'):
+        # List all playlist
+        playlists = []
+        for file in os.listdir("."):
+            if file.endswith("_playlist.txt"):
+                playlists.append(file[:-13])
+        await message.channel.send("Playlists: "+", ".join(playlists))
+    elif message.content.startswith('!readpl '):
+        playlist_name = message.content[8:]
+        # Open file like playlist_name_playlist.txt if not exist send message to channel
+        if not os.path.exists(playlist_name+"_playlist.txt"):
+            await message.channel.send("Playlist not found")
+            return
+        file = open(playlist_name+"_playlist.txt", "r")
+        toSend = playlist_name+":\n"
+        i=0
+        for line in file:
+            toSend += str(i)+": "+line+"\n"
+            i+=1
+        file.close()
+        await message.channel.send(toSend)
     elif message.content.startswith('!playforce'):
         if len(song_queue) == 0:
             await message.channel.send("Queue is empty")
@@ -472,7 +500,41 @@ async def HandleMessageEvent(message, song_queue):
                         vc = x
                         break
             await play_song(vc, message, song_queue[0], channel)
-            
+    elif message.content==('!history'):
+        History = ReadHistoryFile()
+        await message.channel.send(History)
+    elif message.content==('!createhistory'):
+        CreateHistoryFile()
+        await message.channel.send("History file created")
+
+
+def CreateHistoryFile():
+    # Create a file called history.txt if not exist
+    if not os.path.exists("history.txt"):
+        file = open("history.txt", "w")
+        file.close()
+
+
+def WriteHistoryFile(userinput, username):
+    timeNow = datetime.datetime.now()
+    timeNowFormatted = timeNow.strftime("%d/%m/%Y %H:%M:%S")
+    # Write the userinput and username to history.txt
+    file = open("history.txt", "a")
+    file.write(username+" "+userinput+" "+timeNowFormatted+"\n")
+    file.close()
+
+
+def ReadHistoryFile():
+    # Read the history.txt file and get the username and userinput each line like(username userinput)
+    i = 0
+    result=""
+    for line in open("history.txt"):
+        Credentials = line.split(" ")
+        Username = Credentials[0]
+        Userinput = " ".join(Credentials[1:])
+        result += str(i)+": |" + Username+"| "+Userinput+"\n"
+        i += 1
+    return result
 
 
 async def PlaySong(song_name, channel, message):
