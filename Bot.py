@@ -96,7 +96,7 @@ async def play_song(vc, message, url, channel):
         if not client.voice_clients:
             vc = await channel.connect()
         x = song_queue[0]
-        await message.channel.send('Playing ' + url)
+        await message.channel.send(':play_pause: Playing ' + url)
         await ChangeStatus(x)
         vc.play(discord.FFmpegPCMAudio(x))
         while vc.is_playing() or vc.is_paused():
@@ -225,6 +225,8 @@ async def HandleMessageEvent(message, song_queue):
             return
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
     elif message.content.startswith('!queue') or message.content.startswith('!q '):
+        #remove the sended message from the channel
+        await message.delete()
         song_queueFormatted = ""
         i = 0
         for x in song_queue:
@@ -238,10 +240,8 @@ async def HandleMessageEvent(message, song_queue):
             if (x.guild == message.guild):
                 if x.is_playing():
                     x.stop()
-                    if len(song_queue) > 0:
-                        song_queue.pop(0)
-                        await play_song(x, message, song_queue[0], channel)
-                    else:
+                    await message.channel.send(':fast_forward: Skipped')
+                    if not len(song_queue) > 0:
                         await x.disconnect()
                     await DefaultStatus()
                 """ song_queue.pop(0) """
