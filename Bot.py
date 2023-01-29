@@ -158,7 +158,15 @@ async def HandleMessageEvent(message, song_queue):
     if message.author.voice is not None:
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
-
+    if message.content.startswith('!'):
+        #Parse all old bot message and delete them
+        i=0
+        async for msg in message.channel.history(limit=4):
+            if msg.author == client.user and msg!=message:
+                await msg.delete()
+            elif  msg.content.startswith('!') and msg!=message:
+                await msg.delete()
+            i+=1
     if message.content.startswith('!play ') or message.content.startswith('!p '):
         CreateHistoryFile()
         if channel != None:
@@ -241,7 +249,7 @@ async def HandleMessageEvent(message, song_queue):
                 if x.is_playing():
                     x.stop()
                     await message.channel.send(':fast_forward: Skipped')
-                    if not len(song_queue) > 0:
+                    if len(song_queue) == 1:
                         await x.disconnect()
                     await DefaultStatus()
                 """ song_queue.pop(0) """
@@ -510,6 +518,7 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content==('!createhistory'):
         CreateHistoryFile()
         await message.channel.send("History file created")
+    
         
 async def PlayUniqueSong(vc, song_name):
         vc.play(discord.FFmpegPCMAudio(song_name))
