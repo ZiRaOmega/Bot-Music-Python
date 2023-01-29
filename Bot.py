@@ -71,22 +71,19 @@ async def ChangeStatus(music_name):
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=fileNameFormatted(music_name)))
 
 
-async def DownloadVideo(url):
-    info = ytdl.extract_info(url, download=False)
-    file_name = ytdl.prepare_filename(info)
-    url = info['webpage_url']
-    if os.path.exists(file_name):
-        return file_name, url
-    elif len(info) > 0:
-        # Download the video as file_name
-        try:
-            ytdl.download([url])
-        except:
-            ytdl.download([url])
-    else:
-        return None, None
-    print(file_name)
-    return file_name, url
+async def DownloadVideo(song_name):
+    with youtube_dl.YoutubeDL(ytdl_opts) as ydl:
+        info = ydl.extract_info("ytsearch:" + song_name,
+                                download=False)['entries'][0]
+        file_name = ydl.prepare_filename(info)
+        url = info['webpage_url']
+        if os.path.exists(file_name):
+            return file_name, url
+        else:
+            # Download the video as file_name
+            subprocess.Popen(["python3", "downloadytb.py", song_name])
+            print(file_name)
+            return file_name, url
 
 
 async def play_song(vc, message, url, channel):
@@ -118,10 +115,13 @@ def search_and_download_music(song_name):
             return file_name, url
         else:
             # Download the video as file_name
-            try:
-                ydl.download(["ytsearch:" + song_name])
-            except:
-                ydl.download(["ytsearch:" + song_name])
+            if len(song_queue) == 0:
+                try:
+                    ydl.download(["ytsearch:" + song_name])
+                except:
+                    ydl.download(["ytsearch:" + song_name])
+            else:
+                subprocess.Popen(["python3", "downloadytb.py", song_name])
             print(file_name)
             return file_name, url
 
@@ -373,7 +373,7 @@ async def HandleMessageEvent(message, song_queue):
         if message.author.voice:
             if not client.voice_clients:
                 vc = await channel.connect()
-            file_name, url = await DownloadVideo("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            file_name, url = await DownloadVideo("rick astley never gonna give you up")
             await PlaySong(file_name, channel, message)
         else:
             rickLyrics = "Never gonna give you up\nNever gonna let you down\nNever gonna run around and desert you\nNever gonna make you cry\nNever gonna say goodbye\nNever gonna tell a lie and hurt you"
