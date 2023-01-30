@@ -165,12 +165,12 @@ async def HandleMessageEvent(message, song_queue):
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
     if message.content.startswith('!'):
-        # Parse all old bot message and delete them
-        i = 0
-        async for msg in message.channel.history(limit=2):
-            if msg.author == client.user and msg != message and i < 2:
+        #Parse all old bot message and delete them
+        i=0
+        async for msg in message.channel.history(limit=4):
+            if msg.author == client.user and msg!=message:
                 await msg.delete()
-            elif msg.content.startswith('!') and msg != message and i < 2:
+            elif  msg.content.startswith('!') and msg!=message:
                 await msg.delete()
             i += 1
     if message.content.startswith('!play ') or message.content.startswith('!p '):
