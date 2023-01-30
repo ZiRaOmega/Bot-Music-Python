@@ -255,7 +255,7 @@ async def HandleMessageEvent(message, song_queue):
                 if x.is_playing():
                     x.stop()
                     await message.channel.send(':fast_forward: Skipped')
-                    if len(song_queue) == 1:
+                    if len(song_queue) == 1 or len(song_queue) == 0:
                         await x.disconnect()
                     await DefaultStatus()
                 """ song_queue.pop(0) """
