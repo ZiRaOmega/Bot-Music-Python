@@ -514,7 +514,7 @@ async def HandleMessageEvent(message, song_queue):
             vc=await GetVocalClient(client, channel,message)
             await play_song(vc, message, song_queue[0], channel)
     elif message.content==('!history'):
-        ReadHistoryFile(message)
+        await ReadHistoryFile(message)
     elif message.content==('!createhistory'):
         CreateHistoryFile()
         await message.channel.send("History file created")
@@ -552,7 +552,7 @@ def WriteHistoryFile(userinput, username):
     file.close()
 
 
-def ReadHistoryFile(message):
+async def ReadHistoryFile(message):
     # Read the history.txt file and get the username and userinput each line like(username userinput)
     i = 0
     result=""
@@ -561,7 +561,7 @@ def ReadHistoryFile(message):
         Username = Credentials[0]
         Userinput = " ".join(Credentials[1:])
         result = str(i)+": |" + Username+"| "+Userinput+"\n"
-        message.channel.send(result)
+        await message.channel.send(result)
         i += 1
 
 
