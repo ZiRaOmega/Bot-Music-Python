@@ -161,10 +161,10 @@ async def HandleMessageEvent(message, song_queue):
     if message.content.startswith('!'):
         #Parse all old bot message and delete them
         i=0
-        async for msg in message.channel.history(limit=4):
-            if msg.author == client.user and msg!=message:
+        async for msg in message.channel.history(limit=2):
+            if msg.author == client.user and msg!=message and i<2:
                 await msg.delete()
-            elif  msg.content.startswith('!') and msg!=message:
+            elif  msg.content.startswith('!') and msg!=message and i<2:
                 await msg.delete()
             i+=1
     if message.content.startswith('!play ') or message.content.startswith('!p '):
