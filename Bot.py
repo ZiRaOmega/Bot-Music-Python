@@ -5,13 +5,13 @@ import os
 import random
 import subprocess
 import discord
-import youtube_dl
+import yt_dlp as youtube_dl
 import praw
 import time
 import requests
 import urllib.parse
 import sys
-import multiprocessing
+
 """ import lyrics_fetcher """
 ADMIN_MODE = True
 # use env variables for token
@@ -81,20 +81,15 @@ async def DownloadVideo(song_name):
         if os.path.exists(file_name):
             return file_name, url
         else:
-            if len(song_queue) == 0:
-                # wait for the process to finish
-                ytdl.download(["ytsearch:" + song_name])
-            else:
-                p = multiprocessing.Process(
-                    target=ydl.download, args=(["ytsearch:" + song_name],))
-                p.start()
+            # Download the video as file_name
+            subprocess.Popen(["python3", "downloadytb.py", song_name])
             print(file_name)
             return file_name, url
 
 
 async def play_song(vc, message, url, channel):
     while len(song_queue) > 0:
-
+        
         print(song_queue)
         if not client.voice_clients:
             vc = await channel.connect()
@@ -122,12 +117,12 @@ def search_and_download_music(song_name):
         else:
             # Download the video as file_name
             if len(song_queue) == 0:
-                # wait for the process to finish
-                ytdl.download(["ytsearch:" + song_name])
+                try:
+                    ydl.download(["ytsearch:" + song_name])
+                except:
+                    ydl.download(["ytsearch:" + song_name])
             else:
-                p = multiprocessing.Process(
-                    target=ydl.download, args=(["ytsearch:" + song_name],))
-                p.start()
+                subprocess.Popen(["python3", "downloadytb.py", song_name])
             print(file_name)
             return file_name, url
 
@@ -167,12 +162,12 @@ async def HandleMessageEvent(message, song_queue):
     if message.content.startswith('!'):
         #Parse all old bot message and delete them
         i=0
-        async for msg in message.channel.history(limit=4):
-            if msg.author == client.user and msg!=message:
+        async for msg in message.channel.history(limit=2):
+            if msg.author == client.user and msg!=message and i<2:
                 await msg.delete()
-            elif  msg.content.startswith('!') and msg!=message:
+            elif  msg.content.startswith('!') and msg!=message and i<2:
                 await msg.delete()
-            i += 1
+            i+=1
     if message.content.startswith('!play ') or message.content.startswith('!p '):
         CreateHistoryFile()
         if channel != None:
@@ -206,7 +201,7 @@ async def HandleMessageEvent(message, song_queue):
                         return
                     await play_song(vc, message, url, channel)
                 else:
-                    vc = await GetVocalClient(client, channel, message)
+                    vc = await GetVocalClient(client,channel, message)
                     await message.channel.send(':arrow_forward: Playing ' + file_name)
 
                     vc.play(discord.FFmpegPCMAudio(file_name))
@@ -236,14 +231,14 @@ async def HandleMessageEvent(message, song_queue):
             return
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
     elif message.content.startswith('!queue') or message.content.startswith('!q '):
-        # remove the sended message from the channel
+        #remove the sended message from the channel
         await message.delete()
         song_queueFormatted = ""
         i = 0
         for x in song_queue:
             if i == 0:
                 song_queueFormatted += "Now Playing: "+x+"\n"
-                i += 1
+                i+=1
                 continue
             song_queueFormatted += str(i)+": " + x + "\n"
             i += 1
@@ -255,7 +250,7 @@ async def HandleMessageEvent(message, song_queue):
                 if x.is_playing():
                     x.stop()
                     await message.channel.send(':fast_forward: Skipped')
-                    if len(song_queue) == 1 or len(song_queue) == 0:
+                    if len(song_queue) == 1:
                         await x.disconnect()
                     await DefaultStatus()
                 """ song_queue.pop(0) """
@@ -305,10 +300,10 @@ async def HandleMessageEvent(message, song_queue):
         song_queue.clear()
         await message.channel.send("Cleared queue")
     elif message.content.startswith('!shuffle'):
-        current_song = song_queue[0]
+        current_song=song_queue[0]
         song_queue.pop(0)
         random.shuffle(song_queue)
-        song_queue.insert(0, current_song)
+        song_queue.insert(0,current_song)
         await message.channel.send("Shuffled queue")
     elif message.content.startswith('!alredydl'):
         result = ""
@@ -475,7 +470,7 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Playlist is empty")
             return
         else:
-            vc = await GetVocalClient(client, channel, message)
+            vc=await GetVocalClient(client,channel,message)
             await message.channel.send("Playing playlist "+playlist_name)
             while len(plsong_queue) > 0:
                 await message.channel.send("Playing "+plsong_queue[0])
@@ -489,7 +484,7 @@ async def HandleMessageEvent(message, song_queue):
         # Remove file like playlist_name_playlist.txt
         os.remove(playlist_name+"_playlist.txt")
         await message.channel.send("Playlist removed")
-    elif message.content == ('!pllist'):
+    elif message.content==('!pllist'):
         # List all playlist
         playlists = []
         for file in os.listdir("."):
@@ -504,10 +499,10 @@ async def HandleMessageEvent(message, song_queue):
             return
         file = open(playlist_name+"_playlist.txt", "r")
         toSend = playlist_name+":\n"
-        i = 0
+        i=0
         for line in file:
             toSend += str(i)+": "+line+"\n"
-            i += 1
+            i+=1
         file.close()
         await message.channel.send(toSend)
     elif message.content.startswith('!playforce'):
@@ -516,24 +511,23 @@ async def HandleMessageEvent(message, song_queue):
             return
         else:
             await message.channel.send("Playing "+song_queue[0])
-            vc = await GetVocalClient(client, channel, message)
+            vc=await GetVocalClient(client, channel,message)
             await play_song(vc, message, song_queue[0], channel)
-    elif message.content == ('!history'):
+    elif message.content==('!history'):
         History = ReadHistoryFile()
         await message.channel.send(History)
-    elif message.content == ('!createhistory'):
+    elif message.content==('!createhistory'):
         CreateHistoryFile()
         await message.channel.send("History file created")
-
-
+    
+        
 async def PlayUniqueSong(vc, song_name):
-    vc.play(discord.FFmpegPCMAudio(song_name))
-    while vc.is_playing() or vc.is_paused():
-        await asyncio.sleep(1)
-    vc.stop()
-
-
-async def GetVocalClient(client, channel, message):
+        vc.play(discord.FFmpegPCMAudio(song_name))
+        while vc.is_playing() or vc.is_paused():
+            await asyncio.sleep(1)
+        vc.stop()
+          
+async def GetVocalClient(client, channel,message):
     if not client.voice_clients:
         vc = await channel.connect()
     else:
@@ -542,7 +536,6 @@ async def GetVocalClient(client, channel, message):
                 vc = x
                 break
     return vc
-
 
 def CreateHistoryFile():
     # Create a file called history.txt if not exist
@@ -563,7 +556,7 @@ def WriteHistoryFile(userinput, username):
 def ReadHistoryFile():
     # Read the history.txt file and get the username and userinput each line like(username userinput)
     i = 0
-    result = ""
+    result=""
     for line in open("history.txt"):
         Credentials = line.split(" ")
         Username = Credentials[0]

@@ -1,6 +1,6 @@
 import os
-import youtube_dl
 import sys
+import yt_dlp as youtube_dl
 #use : python3 downloadytb.py "video name"
 ytdl_opts = {
     'format': 'worstaudio/worst',
