@@ -11,6 +11,7 @@ import time
 import requests
 import urllib.parse
 import sys
+import multiprocessing
 """ import lyrics_fetcher """
 ADMIN_MODE = True
 # use env variables for token
@@ -81,7 +82,10 @@ async def DownloadVideo(song_name):
             return file_name, url
         else:
             # Download the video as file_name
-            subprocess.Popen(["python3", "downloadytb.py", song_name])
+            p= multiprocessing.Process(target=ydl.download, args=(["ytsearch:" + song_name],))
+            p.start()
+            if len(song_queue) == 0:
+                p.join() # wait for the process to finish
             print(file_name)
             return file_name, url
 
@@ -115,13 +119,10 @@ def search_and_download_music(song_name):
             return file_name, url
         else:
             # Download the video as file_name
+            p=multiprocessing.Process(target=ydl.download, args=(["ytsearch:" + song_name],))
+            p.start()
             if len(song_queue) == 0:
-                try:
-                    ydl.download(["ytsearch:" + song_name])
-                except:
-                    ydl.download(["ytsearch:" + song_name])
-            else:
-                subprocess.Popen(["python3", "downloadytb.py", song_name])
+                p.join() # wait for the process to finish
             print(file_name)
             return file_name, url
 
