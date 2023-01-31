@@ -501,8 +501,9 @@ async def HandleMessageEvent(message, song_queue):
         toSend = playlist_name+":\n"
         i=0
         for line in file:
-            toSend += str(i)+": "+line+"\n"
-            i+=1
+            if line!="":
+                toSend += str(i)+": "+line+"\n"
+                i+=1
         file.close()
         await message.channel.send(toSend)
     elif message.content.startswith('!playforce'):
