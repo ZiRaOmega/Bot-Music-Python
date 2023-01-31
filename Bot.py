@@ -164,9 +164,15 @@ async def HandleMessageEvent(message, song_queue):
         i=0
         async for msg in message.channel.history(limit=2):
             if msg.author == client.user and msg!=message and i<2:
-                await msg.delete()
+                try:
+                    await msg.delete()
+                except:
+                    pass
             elif  msg.content.startswith('!') and msg!=message and i<2:
-                await msg.delete()
+                try:
+                    await msg.delete()
+                except:
+                    pass
             i+=1
     if message.content.startswith('!play ') or message.content.startswith('!p '):
         CreateHistoryFile()
