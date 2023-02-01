@@ -249,7 +249,6 @@ async def HandleMessageEvent(message, song_queue):
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
     elif message.content.startswith('!queue') or message.content.startswith('!q '):
         # remove the sended message from the channel
-        await message.delete()
         song_queueFormatted = ""
         i = 0
         for x in song_queue:
@@ -259,6 +258,8 @@ async def HandleMessageEvent(message, song_queue):
                 continue
             song_queueFormatted += str(i)+": " + x + "\n"
             i += 1
+        if song_queueFormatted == "":
+            song_queueFormatted = "Queue is empty"
         await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
         await message.delete()
