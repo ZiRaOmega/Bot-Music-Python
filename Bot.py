@@ -22,6 +22,7 @@ ADMIN_MODE = True
 TOKEN = os.environ.get('DISCORD_TOKEN')
 openai.api_key = os.environ.get('OPENAI_TOKEN')
 song_queue = []
+mapsongurl = {}
 REPEAT = False
 SEEK = "0:00"
 if TOKEN is None:
@@ -72,6 +73,8 @@ def ReadQueueFile():
     file.close()
     for line in lines:
         song_queue.append(line.strip())
+        global mapsongurl
+        mapsongurl[line.strip()] = line.strip()
 def PopSongFromQueueFile():
     # Remove the first song from the queue
     file = open("queue.txt", "r")
@@ -125,7 +128,27 @@ async def DownloadVideo(song_name):
             print(file_name)
             return file_name, url
 
+async def STREAM_play_song(vc, message, url, channel):
+    global REPEAT
+    global SEEK
+    while len(song_queue) > 0:
 
+        print(song_queue)
+        if not client.voice_clients:
+            vc = await channel.connect()
+        x = mapsongurl[song_queue[0]]
+        await message.channel.send(':play_pause: Playing ' + fileNameFormatted(x))
+        await ChangeStatus(x)
+        vc.play(discord.FFmpegPCMAudio(x,options="-vn -ss "+SEEK))
+        SEEK = "0:00"
+        while vc.is_playing() or vc.is_paused():
+            await asyncio.sleep(1)
+        vc.stop()
+        if not REPEAT:
+            song_queue.pop(0)
+            PopSongFromQueueFile()
+    await vc.disconnect()
+    await DefaultStatus()
 async def play_song(vc, message, url, channel):
     global REPEAT
     global SEEK
@@ -134,10 +157,13 @@ async def play_song(vc, message, url, channel):
         print(song_queue)
         if not client.voice_clients:
             vc = await channel.connect()
-        x = song_queue[0]
-        await message.channel.send(':play_pause: Playing ' + x[:(len(x) - 5)])
+        x=song_queue[0]
         await ChangeStatus(x)
-        vc.play(discord.FFmpegPCMAudio(x,options="-ss "+SEEK))
+        await message.channel.send(':play_pause: Playing ' + fileNameFormatted(x))
+        x = mapsongurl[song_queue[0]]
+        vc.play(discord.FFmpegPCMAudio(x,options="-vn -ss "+SEEK))
+        vc.source = discord.PCMVolumeTransformer(vc.source)
+        vc.source.volume = 0.1
         SEEK = "0:00"
         while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(1)
@@ -148,7 +174,13 @@ async def play_song(vc, message, url, channel):
     await vc.disconnect()
     await DefaultStatus()
 
-
+async def STREAM_PlayUniqueSong(url,channel,message,client):
+    print('Playing ' + url)
+    vc = await GetVocalClient(client, channel, message)
+    vc.play(discord.FFmpegPCMAudio(url,options="-vn"))
+    while vc.is_playing() or vc.is_paused():
+        await asyncio.sleep(1)
+    vc.stop()
 def search_and_download_music(song_name):
     # Search and download the first result
     with youtube_dl.YoutubeDL(ytdl_opts) as ydl:
@@ -169,7 +201,15 @@ def search_and_download_music(song_name):
                 subprocess.Popen(["python3", "downloadytb.py", song_name])
             print(file_name)
             return file_name, url
-
+def STREAM_search_and_download_music(song_name):
+    # Search and download the first result
+    with youtube_dl.YoutubeDL(ytdl_opts) as ydl:
+        info = ydl.extract_info("ytsearch:" + song_name,
+                                download=False)['entries'][0]
+        url = info['url']
+        ytb_title = info['title']
+        
+    return url, ytb_title
 
 def fileNameFormatted(fileName):
     fileName = fileName.replace("_", " ")
@@ -197,6 +237,7 @@ CurrentSong = None
 
 async def HandleMessageEvent(message, song_queue):
     global CurrentSong
+    global mapsongurl
     channel = None
     if message.author == client.user:
         return
@@ -233,16 +274,19 @@ async def HandleMessageEvent(message, song_queue):
             
             # check if url is url or search term
             if not url.startswith('http') or not url.startswith('https'):
-                await message.channel.send('Downloading ' + url)
+                await message.channel.send(':magnet: Downloading ' + url)
                 file_name, url = search_and_download_music(url)
-                await message.channel.send('Found ' + url)
+                #url,file_name=STREAM_search_and_download_music(url)
+                await message.channel.send(':mag: Found ' + file_name)
             else:
                 file_name, url = await DownloadVideo(url)
                 if file_name is None:
-                    await message.channel.send('Could not find ' + url)
+                    await message.channel.send(':mag: Could not find ' + url)
                     return
                 await message.channel.send(':magnet: Downloaded ' + url)
             song_queue.append(file_name)
+            
+            mapsongurl[file_name]=file_name
             WriteSongToQueueFile(file_name)
             CurrentSong = file_name
             if os.path.exists(file_name):
@@ -250,8 +294,11 @@ async def HandleMessageEvent(message, song_queue):
                     # if bot not connected to voice channel
                     if not client.voice_clients:
                         vc = await channel.connect()
+                    elif vc._is_connected() and not vc.is_playing():
+                        await play_song(vc, message, url, channel)
+                        return
                     else:
-                        await message.channel.send(url+' Added to queue')
+                        await message.channel.send(":heavy_plus_sign: "+url+' Added to queue')
                         return
                     await play_song(vc, message, url, channel)
                 else:
@@ -262,10 +309,14 @@ async def HandleMessageEvent(message, song_queue):
                     while vc.is_playing():
                         await asyncio.sleep(1)
                     vc.stop()
+                    
                     # remove song from folder
                     # os.remove(file_name)
                     await vc.disconnect()
                     await DefaultStatus()
+            else:
+                await message.channel.send(':arrow_forward: Playing ' + fileNameFormatted(file_name))
+                #await STREAM_PlayUniqueSong(url, channel, message,client)
         else:
             await message.channel.send(':negative_squared_cross_mark: You are not connected to a voice channel')
     elif message.content.startswith('!stop') or message.content.startswith('!s '):
@@ -281,7 +332,7 @@ async def HandleMessageEvent(message, song_queue):
         url = message.content[10:]
         file_name, url = await DownloadVideo(url)
         if file_name is None:
-            await message.channel.send('Could not find ' + url)
+            await message.channel.send(':negative_squared_cross_mark: Could not find ' + url)
             return
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
     elif message.content.startswith('!queue') or message.content.startswith('!q '):
@@ -290,7 +341,7 @@ async def HandleMessageEvent(message, song_queue):
         i = 0
         for x in song_queue:
             if i == 0:
-                song_queueFormatted += "Now Playing: "+x+"\n"
+                song_queueFormatted += "Now Playing: "+fileNameFormatted(x)+"\n"
                 i += 1
                 continue
             song_queueFormatted += str(i)+": " + x + "\n"
@@ -299,26 +350,26 @@ async def HandleMessageEvent(message, song_queue):
             song_queueFormatted = "Queue is empty"
         await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
-        await message.delete()
+        
         for x in client.voice_clients:
             if (x.guild == message.guild):
                 if x.is_playing():
                     x.stop()
                     await message.channel.send(':fast_forward: Skipped')
-                    if len(song_queue) == 0:
-                        await x.disconnect()
-                    await DefaultStatus()
                 """ song_queue.pop(0) """
                 break
+        if len(song_queue) == 0:
+            await x.disconnect()
+        await DefaultStatus()
     elif message.content.startswith('!pause'):
-        await message.delete()
+        
         for x in client.voice_clients:
             if (x.guild == message.guild):
                 x.pause()
                 break
         await message.channel.send(':pause_button: Paused')
     elif message.content.startswith('!resume'):
-        await message.delete()
+        
         if len(song_queue) > 0:
             if not client.voice_clients:
                 vc = await channel.connect()
@@ -330,14 +381,14 @@ async def HandleMessageEvent(message, song_queue):
                         break
             await message.channel.send(':arrow_forward: Resumed')
         else:
-            await message.channel.send('Queue is empty')
+            await message.channel.send(':island: Queue is empty')
     elif message.content.startswith('!reset'):
-        await message.delete()
+        
         for x in client.voice_clients:
             await x.disconnect()
         song_queue.clear()
     elif message.content.startswith('!help'):
-        await message.channel.send("Commands:\n!play or !p [url] - Plays the song from the url\n!stop or !s - Stops the bot and clears the queue\n!download or !d [url] - Downloads the song from the url\n!queue or !q - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!reset - Resets the bot\n!help - Shows this message\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!alredydl - Prints all files already downloaded\nAdditional commands: !status, !changestatus, !defaultstatus, !ping, !move, !leave, !volume, !creator, !invite, !joke, !random, !resetstatus, !rickroll, !restart, !createpl, !addtopl, !pl, !rmpl, !readpl, !deletesong, !join, !playforce, !repeat")
+        await message.channel.send("Commands:\n!play or !p [url] - Plays the song from the url\n!stop or !s - Stops the bot and clears the queue\n!download or !d [url] - Downloads the song from the url\n!queue or !q - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!reset - Resets the bot\n!help - Shows this message\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!alredydl - Prints all files already downloaded\n!volume - Change volume (Need to be between 0 and 1 like 0.5)\nAdditional commands: !status, !changestatus, !defaultstatus, !ping, !move, !leave,  !creator, !invite, !joke, !random, !resetstatus, !rickroll, !restart, !createpl, !addtopl, !pl, !rmpl, !readpl, !deletesong, !join, !playforce, !repeat")
     elif message.content.startswith('!remove'):
         songToRemove = message.content[8:]
         if songToRemove in song_queue:
@@ -351,8 +402,14 @@ async def HandleMessageEvent(message, song_queue):
         await message.channel.send("Removed duplicate songs from queue")
     elif message.content.startswith('!clear'):
         for file_name in song_queue:
-            os.remove(file_name)
+            try:
+                os.remove(file_name)
+            except:
+                continue
+        Current=song_queue[0]
         song_queue.clear()
+        song_queue.append(Current)
+        RewriteQueueFile(song_queue)
         await message.channel.send("Cleared queue")
     elif message.content.startswith('!shuffle'):
         current_song = song_queue[0]
@@ -380,7 +437,7 @@ async def HandleMessageEvent(message, song_queue):
         if i != 0:
             await message.channel.send(result)
     elif message.content.startswith('!status'):
-        await message.channel.send("Playing " + song_queue[0])
+        await message.channel.send(":play_pause: Playing " + fileNameFormatted(mapsongurl[song_queue[0]]))
     elif message.content.startswith('!changestatus'):
         status = message.content[14:]
         await client.change_presence(activity=discord.Game(name=status))
@@ -409,15 +466,27 @@ async def HandleMessageEvent(message, song_queue):
             if (x.guild == message.guild):
                 await x.disconnect()
                 break
-    elif message.content.startswith('!volume'):
+    elif message.content.startswith('!volume') or message.content=='!volume':
         volume = message.content[8:]
+        if volume == "":
+            for x in client.voice_clients:
+                if (x.guild == message.guild):
+                    CurrentVolume = x.source.volume
+                    await message.channel.send(":speaker: Volume is " + str(CurrentVolume))
+                    return
+        volume = float(volume)
+        if volume >2:
+            volume = 2
+            await message.channel.send(":speaker: Volume needs to be between 0 and 1 like 0.5")
         for x in client.voice_clients:
             if (x.guild == message.guild):
+                
                 x.source = discord.PCMVolumeTransformer(x.source)
-                x.source.volume = float(volume)
+                x.source.volume = volume
                 break
+        await message.channel.send(":speaker: Volume set to " + str(volume))
     elif message.content.startswith('!creator'):
-        await message.channel.send("Created by: ZiRa_Omega")
+        await message.channel.send(":crown: Created by: ZiRa_Omega")
     elif message.content.startswith('!invite'):
         await message.channel.send("https://discord.com/api/oauth2/authorize?client_id=765308076500254730&permissions=8&scope=bot")
     elif message.content.startswith('!joke'):
@@ -430,13 +499,17 @@ async def HandleMessageEvent(message, song_queue):
             if file.endswith(".webm") or file.endswith(".m4a"):
                 songs.append(file)
         random_song = random.choice(songs)
-        await message.channel.send("Playing " + random_song)
+        await message.channel.send(":play_pause: Playing " + fileNameFormatted(random_song))
         if len(song_queue) == 0:
             song_queue.append(random_song)
+            
+            mapsongurl[random_song]=random_song
             WriteSongToQueueFile(random_song)
             await PlaySong(random_song, channel, message)
         else:
             song_queue.append(random_song)
+            
+            mapsongurl[random_song]=random_song
             WriteSongToQueueFile(random_song)
     elif message.content.startswith('!resetstatus'):
         await DefaultStatus()
@@ -494,7 +567,7 @@ async def HandleMessageEvent(message, song_queue):
             EnterFuck01(UserName)
     elif message.content.startswith('!restart'):
         # restart the bot
-        await message.channel.send("Restarting...")
+        await message.channel.send(":repeat: Restarting...")
         # os.system("bash restart.sh") using subprocess
         subprocess.Popen(["bash", "restart.sh"])
         exit()
@@ -513,7 +586,7 @@ async def HandleMessageEvent(message, song_queue):
         # Join the query to get the song name
         song_name = " ".join(query)
         WritePlaylistFile(playlist_name, song_name)
-        await message.channel.send("Added "+song_name+" to "+playlist_name)
+        await message.channel.send(":heavy_plus_sign: Added "+song_name+" to "+playlist_name)
     elif message.content.startswith('!pl '):
         
         playlist_name = message.content[4:]
@@ -525,7 +598,7 @@ async def HandleMessageEvent(message, song_queue):
             vc = await GetVocalClient(client, channel, message)
             await message.channel.send("Playing playlist "+playlist_name)
             while len(plsong_queue) > 0:
-                await message.channel.send("Playing "+plsong_queue[0])
+                await message.channel.send("Playing "+fileNameFormatted(plsong_queue[0]))
                 await PlayUniqueSong(vc, plsong_queue[0])
                 plsong_queue.pop(0)
                 song_queue.pop(0)
@@ -551,11 +624,14 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Queue is empty")
             return
         else:
-            await message.channel.send("Playing "+song_queue[0])
+            await message.channel.send("Playing "+fileNameFormatted(song_queue[0]))
             vc = await GetVocalClient(client, channel, message)
             await play_song(vc, message, song_queue[0], channel)
-    elif message.content == ('!history'):
-        await ReadHistoryFile(message)
+    elif message.content == ('!history') or message.content.startswith('!history '):
+        opts = message.content[9:]
+        if opts == "":
+            opts = "10"
+        await ReadHistoryFile(message,opts)
     elif message.content == ('!createhistory'):
         CreateHistoryFile()
         await message.channel.send("History file created")
@@ -577,13 +653,16 @@ async def HandleMessageEvent(message, song_queue):
         global REPEAT
         REPEAT = not REPEAT
         if REPEAT:
-            await message.channel.send("Repeat is now on for "+song_queue[0])
+            await message.channel.send("Repeat is now on for "+fileNameFormatted(mapsongurl[song_queue[0]]))
         else:
             await message.channel.send("Repeat is now off")
     elif message.content.startswith('!deletesong '):
         songtodelete = message.content[12:]
         if songtodelete.isdigit():
             songtodelete = int(songtodelete)
+            if songtodelete == 0:
+                await message.channel.send("Can't delete the current song use !skip to skip the current song")
+                return
             if songtodelete < len(song_queue):
                 await message.channel.send("Song deleted : "+song_queue[songtodelete])
                 song_queue.pop(songtodelete)
@@ -615,8 +694,18 @@ async def HandleMessageEvent(message, song_queue):
                 
         else:
             await message.channel.send("Invalid seek format")
-            
-        
+    elif message.content.startswith("!ps "):
+        song_name=message.content[4:]
+        url, title = STREAM_search_and_download_music(song_name)
+        if len(song_queue)>0:
+            await message.channel.send("Song added to queue : "+title)
+            song_queue.append(title)
+            mapsongurl[title]=url
+            return
+        song_queue.append(title)
+        mapsongurl[title]=url
+        await message.channel.send("Playing "+fileNameFormatted(title) )
+        await STREAM_PlayUniqueSong(url,channel,message,client)
         
 
 
@@ -655,6 +744,8 @@ def StartPlaylist(playlist_name):
         song_name = line.strip()  # remove \n
         song_name, url = search_and_download_music(song_name)
         song_queue.append(song_name)
+        global mapsongurl
+        mapsongurl[song_name]=song_name
         plsong_queue.append(song_name)
     file.close()
     return plsong_queue
@@ -700,18 +791,16 @@ def WriteHistoryFile(userinput, username):
     file.close()
 
 
-async def ReadHistoryFile(message):
-    # Read the history.txt file and get the username and userinput each line like(username userinput)
+async def ReadHistoryFile(message,opts):
+    # Read the history.txt file from the end and get the username and userinput each line like(username userinput)
     i = 0
     result = ""
-    for line in open("history.txt"):
-        Credentials = line.split(" ")
-        Username = Credentials[0]
-        Userinput = " ".join(Credentials[1:])
-        result = str(i)+": |" + Username+"| "+Userinput+"\n"
-        await message.channel.send(result)
+    for line in reversed(list(open("history.txt"))):
+        if i == opts:
+            break
         i += 1
-
+        result+=str(i) + ": " + line+"\n"
+    await message.channel.send(result)
 
 async def PlaySong(song_name, channel, message):
     if not client.voice_clients:
