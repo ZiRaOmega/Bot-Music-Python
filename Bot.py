@@ -53,11 +53,48 @@ ytdl = youtube_dl.YoutubeDL(ytdl_opts)
     lyrics = lyrics_fetcher.get_lyrics(song_name)
     return lyrics """
 # print(GetLyrics("The Weeknd - Blinding Lights"))
+def CreateQueueFile():
+    if not os.path.exists("queue.txt"):
+        # Create a file to store the queue
+        file = open("queue.txt", "w")
+        file.close()
+def WriteSongToQueueFile(SongName):
+    # Write the queue to the file
+    file = open("queue.txt", "w")
+    file.write(SongName+"\n")
+    file.close()
+def ReadQueueFile():
+    global song_queue
+    # Read the queue from the file
+    file = open("queue.txt", "r")
+    for line in file:
+        line = line.strip()
+        song_queue.append(line)
+def PopSongFromQueueFile():
+    # Remove the first song from the queue
+    file = open("queue.txt", "r")
+    lines = file.readlines()
+    file.close()
+    file = open("queue.txt", "w")
+    for line in lines[1:]:
+        file.write(line)
+    file.close()
+def RewriteQueueFile(song_queue):
+    #Remove all songs from the queuefile
+    file = open("queue.txt", "w")
+    file.truncate(0) #remove all content
+    for song in song_queue:
+        file.write(song+"\n")
+    file.close()
+    
+    
 
 
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
+    CreateQueueFile()
+    ReadQueueFile()
 
 
 @client.event
@@ -111,6 +148,7 @@ async def play_song(vc, message, url, channel):
         vc.stop()
         if not REPEAT:
             song_queue.pop(0)
+            PopSongFromQueueFile()
     await vc.disconnect()
     await DefaultStatus()
 
@@ -196,6 +234,7 @@ async def HandleMessageEvent(message, song_queue):
             url = message.content[6:]
             username = message.author.name
             WriteHistoryFile(url, username)
+            
             # check if url is url or search term
             if not url.startswith('http') or not url.startswith('https'):
                 await message.channel.send('Downloading ' + url)
@@ -208,6 +247,7 @@ async def HandleMessageEvent(message, song_queue):
                     return
                 await message.channel.send(':magnet: Downloaded ' + url)
             song_queue.append(file_name)
+            WriteSongToQueueFile(file_name)
             CurrentSong = file_name
             if os.path.exists(file_name):
                 if len(song_queue) > 0:
@@ -323,6 +363,7 @@ async def HandleMessageEvent(message, song_queue):
         song_queue.pop(0)
         random.shuffle(song_queue)
         song_queue.insert(0, current_song)
+        RewriteQueueFile(song_queue)
         await message.channel.send("Shuffled queue")
     elif message.content.startswith('!alredydl'):
         result = ""
@@ -383,15 +424,17 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!random'):
         songs = []
         for file in os.listdir():
-            if file.endswith(".webm"):
+            if file.endswith(".webm") or file.endswith(".m4a"):
                 songs.append(file)
         random_song = random.choice(songs)
         await message.channel.send("Playing " + random_song)
         if len(song_queue) == 0:
             song_queue.append(random_song)
+            WriteSongToQueueFile(random_song)
             await PlaySong(random_song, channel, message)
         else:
             song_queue.append(random_song)
+            WriteSongToQueueFile(random_song)
     elif message.content.startswith('!resetstatus'):
         await DefaultStatus()
     elif message.content.startswith('!rickroll'):
@@ -495,6 +538,7 @@ async def HandleMessageEvent(message, song_queue):
                 await PlayUniqueSong(vc, plsong_queue[0])
                 plsong_queue.pop(0)
                 song_queue.pop(0)
+                PopSongFromQueueFile()
             await play_song(vc, message, song_queue[0], channel)
             await message.channel.send("Playlist Ended")
     elif message.content.startswith('!rmpl'):
