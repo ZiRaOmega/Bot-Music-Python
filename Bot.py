@@ -62,7 +62,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    await HandleMessageEvent(message, song_queue)
+    await HandleMessageEvent(message, song_queue, REPEAT)
 
 
 @client.event
@@ -160,7 +160,7 @@ def fileNameFormatted(fileName):
 CurrentSong = None
 
 
-async def HandleMessageEvent(message, song_queue):
+async def HandleMessageEvent(message, song_queue, REPEAT):
     global CurrentSong
     channel = None
     if message.author == client.user:
