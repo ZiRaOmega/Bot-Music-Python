@@ -60,7 +60,7 @@ def CreateQueueFile():
         file.close()
 def WriteSongToQueueFile(SongName):
     # Write the queue to the file
-    file = open("queue.txt", "w")
+    file = open("queue.txt", "a")
     file.write(SongName+"\n")
     file.close()
 def ReadQueueFile():
