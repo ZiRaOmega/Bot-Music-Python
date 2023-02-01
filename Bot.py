@@ -170,6 +170,8 @@ async def HandleMessageEvent(message, song_queue):
         # Parse all old bot message and delete them
         i = 0
         async for msg in message.channel.history(limit=2):
+            if message.content.startswith('!chatgpt '):
+                continue
             if msg.author == client.user and msg != message and i < 2:
                 try:
                     await msg.delete()
