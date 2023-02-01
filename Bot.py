@@ -355,12 +355,11 @@ async def HandleMessageEvent(message, song_queue):
             if (x.guild == message.guild):
                 await x.move_to(channel)
                 break
-    elif message.content.startswith('!join'):
-        channel = message.content[6:]
-        for x in client.voice_clients:
-            if (x.guild == message.guild):
-                await x.move_to(channel)
-                break
+    elif message.content==('!join'):
+        if not client.voice_clients:
+            channel = message.author.voice.channel
+            await channel.connect()
+
     elif message.content.startswith('!leave'):
         for x in client.voice_clients:
             if (x.guild == message.guild):
