@@ -137,7 +137,7 @@ async def play_song(vc, message, url, channel):
         x = song_queue[0]
         await message.channel.send(':play_pause: Playing ' + x[:(len(x) - 5)])
         await ChangeStatus(x)
-        vc.play(discord.FFmpegPCMAudio(x),options="-ss "+SEEK)
+        vc.play(discord.FFmpegPCMAudio(x,options="-ss "+SEEK))
         SEEK = "0:00"
         while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(1)
