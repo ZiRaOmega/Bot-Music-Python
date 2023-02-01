@@ -12,8 +12,6 @@ import requests
 import urllib.parse
 import sys
 import openai
-# Set up the OpenAI API client
-openai.api_key = "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"
 
 # Set up the model and prompt
 model_engine = "text-davinci-003"
@@ -21,9 +19,13 @@ model_engine = "text-davinci-003"
 ADMIN_MODE = True
 # use env variables for token
 TOKEN = os.environ.get('DISCORD_TOKEN')
+openai.api_key = os.environ.get('OPENAI_TOKEN')
 song_queue = []
 if TOKEN is None:
     print("No token found use export DISCORD_TOKEN='your_token'")
+    exit()
+if openai.api_key is None:
+    print("No OPENAI token found use export OPENAI_TOKEN='your_token'")
     exit()
 
 client = discord.Client(intents=discord.Intents.all())
