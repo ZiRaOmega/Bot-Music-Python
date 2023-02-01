@@ -22,6 +22,7 @@ TOKEN = os.environ.get('DISCORD_TOKEN')
 openai.api_key = os.environ.get('OPENAI_TOKEN')
 song_queue = []
 REPEAT = False
+
 if TOKEN is None:
     print("No token found use export DISCORD_TOKEN='your_token'")
     exit()
@@ -360,6 +361,7 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!alredydl'):
         result = ""
         # read all files in folder
+        i=0
         for file in os.listdir():
             # if file is webm
             if file.endswith(".webm"):
@@ -367,7 +369,13 @@ async def HandleMessageEvent(message, song_queue):
                 file = file.replace(".webm", "")
                 # add to result
                 result += file + "\n"
-        await message.channel.send(result)
+                i += 1
+                if i == 10:
+                    await message.channel.send(result)
+                    result = ""
+                    i = 0
+        if i != 0:
+            await message.channel.send(result)
     elif message.content.startswith('!status'):
         await message.channel.send("Playing " + song_queue[0])
     elif message.content.startswith('!changestatus'):
@@ -535,7 +543,7 @@ async def HandleMessageEvent(message, song_queue):
         # Read playlist file
         toSend=ReadPlaylistFile(playlist_name)
         await message.channel.send(toSend)
-    elif message.content.startswith('!playforce'):
+    elif message.content==('!playforce'):
         if len(song_queue) == 0:
             await message.channel.send("Queue is empty")
             return
