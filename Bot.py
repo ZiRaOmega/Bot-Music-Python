@@ -593,7 +593,7 @@ async def HandleMessageEvent(message, song_queue):
                     song_queue.remove(song)
                     await message.channel.send("Song deleted : "+song)
                     return
-    elif message.content.startwith("!seek "):
+    elif message.content.startswith("!seek "):
         seek = message.content[6:]
         global SEEK
         
