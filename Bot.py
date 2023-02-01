@@ -556,6 +556,22 @@ async def HandleMessageEvent(message, song_queue):
         REPEAT = not REPEAT
         print(str(REPEAT))
         await message.channel.send("Repeat is now "+str(REPEAT))
+    elif message.content.startswith('!deletesong '):
+        songtodelete = message.content[12:]
+        if songtodelete.isdigit():
+            songtodelete = int(songtodelete)
+            if songtodelete < len(song_queue):
+                await message.channel.send("Song deleted : "+song_queue[songtodelete])
+                song_queue.pop(songtodelete)
+            else:
+                await message.channel.send("Song not found try !queue to see the queue and use !deletesong <number>")
+        else:
+            for song in song_queue:
+                if songtodelete in song:
+                    song_queue.remove(song)
+                    await message.channel.send("Song deleted : "+song)
+                    return
+            
         
         
 
