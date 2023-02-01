@@ -62,7 +62,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    await HandleMessageEvent(message, song_queue, REPEAT)
+    await HandleMessageEvent(message, song_queue)
 
 
 @client.event
@@ -96,6 +96,7 @@ async def DownloadVideo(song_name):
 
 
 async def play_song(vc, message, url, channel):
+    global REPEAT
     while len(song_queue) > 0:
 
         print(song_queue)
@@ -160,7 +161,7 @@ def fileNameFormatted(fileName):
 CurrentSong = None
 
 
-async def HandleMessageEvent(message, song_queue, REPEAT):
+async def HandleMessageEvent(message, song_queue):
     global CurrentSong
     channel = None
     if message.author == client.user:
@@ -268,7 +269,7 @@ async def HandleMessageEvent(message, song_queue, REPEAT):
                 if x.is_playing():
                     x.stop()
                     await message.channel.send(':fast_forward: Skipped')
-                    if len(song_queue) == 1:
+                    if len(song_queue) == 0:
                         await x.disconnect()
                     await DefaultStatus()
                 """ song_queue.pop(0) """
@@ -552,6 +553,7 @@ async def HandleMessageEvent(message, song_queue, REPEAT):
         response = completion.choices[0].text
         await message.channel.send(response)
     elif message.content=="!repeat":
+        global REPEAT
         REPEAT = not REPEAT
         print(str(REPEAT))
         await message.channel.send("Repeat is now "+str(REPEAT))
