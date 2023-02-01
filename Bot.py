@@ -64,12 +64,12 @@ def WriteSongToQueueFile(SongName):
     file.write(SongName+"\n")
     file.close()
 def ReadQueueFile():
-    global song_queue
     # Read the queue from the file
     file = open("queue.txt", "r")
-    for line in file:
-        line = line.strip()
-        song_queue.append(line)
+    lines = file.readlines()
+    file.close()
+    for line in lines:
+        song_queue.append(line.strip())
 def PopSongFromQueueFile():
     # Remove the first song from the queue
     file = open("queue.txt", "r")
