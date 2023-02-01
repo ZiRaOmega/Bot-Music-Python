@@ -552,7 +552,8 @@ async def HandleMessageEvent(message, song_queue):
         await message.channel.send(response)
     elif message.content=="repeat":
         REPEAT = not REPEAT
-        print(REPEAT)
+        print(str(REPEAT))
+        await message.channel.send("Repeat is now "+str(REPEAT))
         
         
 
