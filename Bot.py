@@ -551,7 +551,7 @@ async def HandleMessageEvent(message, song_queue):
 
         response = completion.choices[0].text
         await message.channel.send(response)
-    elif message.content=="repeat":
+    elif message.content=="!repeat":
         REPEAT = not REPEAT
         print(str(REPEAT))
         await message.channel.send("Repeat is now "+str(REPEAT))
