@@ -576,8 +576,10 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content=="!repeat":
         global REPEAT
         REPEAT = not REPEAT
-        print(str(REPEAT))
-        await message.channel.send("Repeat is now "+str(REPEAT))
+        if REPEAT:
+            await message.channel.send("Repeat is now on for "+song_queue[0])
+        else:
+            await message.channel.send("Repeat is now off")
     elif message.content.startswith('!deletesong '):
         songtodelete = message.content[12:]
         if songtodelete.isdigit():
@@ -598,7 +600,7 @@ async def HandleMessageEvent(message, song_queue):
         global SEEK
         
         #Regex for 0:00
-        if re.match("^[0-9][0-9]:[0-9][0-9]$", seek):
+        if re.match("^[0-9][0-9]:[0-9][0-9]$", seek) or re.match("^[0-9]:[0-9][0-9]$", seek) or re.match("^[0-9][0-9]:[0-9]$", seek) or re.match("^[0-9]:[0-9]$", seek):
             await message.channel.send("Seeking to "+seek)
             vc=await GetVocalClient(client, channel, message)
             #stop the song
