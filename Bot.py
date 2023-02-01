@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import os
 import random
+import re
 import subprocess
 import discord
 import yt_dlp as youtube_dl
@@ -22,7 +23,7 @@ TOKEN = os.environ.get('DISCORD_TOKEN')
 openai.api_key = os.environ.get('OPENAI_TOKEN')
 song_queue = []
 REPEAT = False
-
+SEEK = "0:00"
 if TOKEN is None:
     print("No token found use export DISCORD_TOKEN='your_token'")
     exit()
@@ -127,6 +128,7 @@ async def DownloadVideo(song_name):
 
 async def play_song(vc, message, url, channel):
     global REPEAT
+    global SEEK
     while len(song_queue) > 0:
 
         print(song_queue)
@@ -135,7 +137,8 @@ async def play_song(vc, message, url, channel):
         x = song_queue[0]
         await message.channel.send(':play_pause: Playing ' + x[:(len(x) - 5)])
         await ChangeStatus(x)
-        vc.play(discord.FFmpegPCMAudio(x))
+        vc.play(discord.FFmpegPCMAudio(x),options="-ss "+SEEK)
+        SEEK = "0:00"
         while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(1)
         vc.stop()
@@ -590,6 +593,26 @@ async def HandleMessageEvent(message, song_queue):
                     song_queue.remove(song)
                     await message.channel.send("Song deleted : "+song)
                     return
+    elif message.content.startwith("!seek "):
+        seek = message.content[6:]
+        global SEEK
+        
+        #Regex for 0:00
+        if re.match("^[0-9][0-9]:[0-9][0-9]$", seek):
+            await message.channel.send("Seeking to "+seek)
+            vc=await GetVocalClient(client, channel, message)
+            #stop the song
+            
+            if vc.is_playing():
+                
+                SEEK = seek
+                #Insert at the index 1 of the queue the song at index 0 without removing the song at index 1
+                if not REPEAT:
+                    song_queue.insert(1, song_queue[0])
+                vc.stop()
+                
+        else:
+            await message.channel.send("Invalid seek format")
             
         
         
