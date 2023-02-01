@@ -21,6 +21,7 @@ ADMIN_MODE = True
 TOKEN = os.environ.get('DISCORD_TOKEN')
 openai.api_key = os.environ.get('OPENAI_TOKEN')
 song_queue = []
+REPEAT = False
 if TOKEN is None:
     print("No token found use export DISCORD_TOKEN='your_token'")
     exit()
@@ -107,7 +108,8 @@ async def play_song(vc, message, url, channel):
         while vc.is_playing() or vc.is_paused():
             await asyncio.sleep(1)
         vc.stop()
-        song_queue.pop(0)
+        if not REPEAT:
+            song_queue.pop(0)
     await vc.disconnect()
     await DefaultStatus()
 
@@ -548,6 +550,11 @@ async def HandleMessageEvent(message, song_queue):
 
         response = completion.choices[0].text
         await message.channel.send(response)
+    elif message.content=="repeat":
+        global REPEAT
+        REPEAT = not REPEAT
+        
+        
 
 
 async def PlayUniqueSong(vc, song_name):
