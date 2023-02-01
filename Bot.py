@@ -252,7 +252,7 @@ async def HandleMessageEvent(message, song_queue):
                     await play_song(vc, message, url, channel)
                 else:
                     vc = await GetVocalClient(client, channel, message)
-                    await message.channel.send(':arrow_forward: Playing ' + file_name)
+                    await message.channel.send(':arrow_forward: Playing ' + fileNameFormatted(file_name))
 
                     vc.play(discord.FFmpegPCMAudio(file_name))
                     while vc.is_playing():
@@ -490,8 +490,7 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!createpl'):
         playlist_name = message.content[10:]
         # Create file like playlist_name_playlist.txt
-        file = open(playlist_name+"_playlist.txt", "w")
-        file.close()
+        CreatePlaylistFile(playlist_name)
     elif message.content.startswith('!addtopl'):
         query = message.content.split(" ")
         if len(query) < 3:
@@ -502,23 +501,12 @@ async def HandleMessageEvent(message, song_queue):
         query.pop(0)
         # Join the query to get the song name
         song_name = " ".join(query)
-        # Open file like playlist_name_playlist.txt if not exist create it
-        file = open(playlist_name+"_playlist.txt", "a")
-        file.write(song_name+"\n")
-        file.close()
+        WritePlaylistFile(playlist_name, song_name)
         await message.channel.send("Added "+song_name+" to "+playlist_name)
     elif message.content.startswith('!pl '):
-        plsong_queue = []
+        
         playlist_name = message.content[4:]
-        # Open file like playlist_name_playlist.txt if not exist create it
-        file = open(playlist_name+"_playlist.txt", "r")
-        for line in file:
-            print(line)
-            song_name = line.strip()  # remove \n
-            song_name, url = search_and_download_music(song_name)
-            song_queue.append(song_name)
-            plsong_queue.append(song_name)
-        file.close()
+        plsong_queue = StartPlaylist(playlist_name)
         if len(plsong_queue) == 0:
             await message.channel.send("Playlist is empty")
             return
@@ -536,29 +524,16 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!rmpl'):
         playlist_name = message.content[6:]
         # Remove file like playlist_name_playlist.txt
-        os.remove(playlist_name+"_playlist.txt")
+        RemovePlaylistFile(playlist_name)
         await message.channel.send("Playlist removed")
     elif message.content == ('!pllist'):
         # List all playlist
-        playlists = []
-        for file in os.listdir("."):
-            if file.endswith("_playlist.txt"):
-                playlists.append(file[:-13])
-        await message.channel.send("Playlists: "+", ".join(playlists))
+        toSend=ListPlaylist()
+        await message.channel.send(toSend)
     elif message.content.startswith('!readpl '):
         playlist_name = message.content[8:]
-        # Open file like playlist_name_playlist.txt if not exist send message to channel
-        if not os.path.exists(playlist_name+"_playlist.txt"):
-            await message.channel.send("Playlist not found")
-            return
-        file = open(playlist_name+"_playlist.txt", "r")
-        toSend = playlist_name+":\n"
-        i = 0
-        for line in file:
-            if line != "":
-                toSend += str(i)+": "+line+"\n"
-                i += 1
-        file.close()
+        # Read playlist file
+        toSend=ReadPlaylistFile(playlist_name)
         await message.channel.send(toSend)
     elif message.content.startswith('!playforce'):
         if len(song_queue) == 0:
@@ -628,8 +603,54 @@ async def GetVocalClient(client, channel, message):
                 vc = x
                 break
     return vc
-
-
+def CreatePlaylistFile(playlist_name):
+    # Create a file called playlist_name_playlist.txt if not exist
+    if not os.path.exists(playlist_name+"_playlist.txt"):
+        file = open(playlist_name+"_playlist.txt", "w")
+        file.close()
+def WritePlaylistFile(playlist_name, song_name):
+    # Open file like playlist_name_playlist.txt if not exist create it
+    file = open(playlist_name+"_playlist.txt", "a")
+    file.write(song_name+"\n")
+    file.close()
+def StartPlaylist(playlist_name):
+    plsong_queue = []
+    # Open file like playlist_name_playlist.txt if not exist create it
+    file = open(playlist_name+"_playlist.txt", "r")
+    for line in file:
+        print(line)
+        song_name = line.strip()  # remove \n
+        song_name, url = search_and_download_music(song_name)
+        song_queue.append(song_name)
+        plsong_queue.append(song_name)
+    file.close()
+    return plsong_queue
+def ListPlaylist():
+    # List all playlist
+    toSend = ""
+    i=0
+    for file in os.listdir():
+        if file.endswith("_playlist.txt"):
+            toSend += str(i)+": "+file[:-12]+"\n" #
+            i+=1
+    return toSend
+    
+def ReadPlaylistFile(playlist_name):
+    if not os.path.exists(playlist_name+"_playlist.txt"):
+        return "Playlist not found"
+    # Open file like playlist_name_playlist.txt if not exist create it
+    file = open(playlist_name+"_playlist.txt", "r")
+    toSend = playlist_name+":\n"
+    i = 0
+    for line in file:
+        if line != "":
+            toSend += str(i)+": "+line+"\n"
+            i += 1
+    file.close()
+    return toSend
+def RemovePlaylistFile(playlist_name):
+    # Remove file like playlist_name_playlist.txt
+    os.remove(playlist_name+"_playlist.txt")
 def CreateHistoryFile():
     # Create a file called history.txt if not exist
     if not os.path.exists("history.txt"):
