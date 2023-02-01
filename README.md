@@ -51,8 +51,6 @@ The bot has the following commands:
 - !random -
 - !resetstatus -
 - !rickroll -
-- !fuck01 -
-- !love01 -
 - !restart -
 - !createpl -
 - !addtopl -
