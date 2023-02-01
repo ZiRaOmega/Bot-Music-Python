@@ -86,16 +86,6 @@ def RewriteQueueFile(song_queue):
     for song in song_queue:
         file.write(song+"\n")
     file.close()
-    
-    
-
-
-@client.event
-async def on_ready():
-    print(f'{client.user} has connected to Discord!')
-    CreateQueueFile()
-    ReadQueueFile()
-
 
 @client.event
 async def on_message(message):
@@ -105,6 +95,8 @@ async def on_message(message):
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
+    CreateQueueFile()
+    ReadQueueFile()
     await DefaultStatus()
 
 
