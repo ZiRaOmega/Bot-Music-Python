@@ -706,7 +706,17 @@ async def HandleMessageEvent(message, song_queue):
         mapsongurl[title]=url
         await message.channel.send("Playing "+fileNameFormatted(title) )
         await STREAM_PlayUniqueSong(url,channel,message,client)
-        
+    elif message.content.startswith("!dallE "):
+        prompt = message.content[7:]
+        ImageCreation = openai.Image.create(
+            prompt=prompt,
+            n=1,
+            size="256x256",
+        )
+        ImageUrl = ImageCreation["data"][0]["url"]
+        embedVar = discord.Embed(title=prompt, description=prompt, color=0x00ff00)
+        embedVar.set_image(url=ImageUrl)
+        await message.channel.send(embed=embedVar)
 
 
 async def PlayUniqueSong(vc, song_name):
