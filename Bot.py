@@ -335,7 +335,7 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send(':negative_squared_cross_mark: Could not find ' + url)
             return
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
-    elif message.content.startswith('!queue') or message.content.startswith('!q '):
+    elif message.content==('!queue') or message.content==('!q '):
         # remove the sended message from the channel
         song_queueFormatted = ""
         i = 0
