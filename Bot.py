@@ -593,15 +593,17 @@ async def HandleMessageEvent(message, song_queue):
         
         playlist_name = message.content[4:]
         plsong_queue = StartPlaylist(playlist_name)
+        if len(song_queue)>0:
+            return
         if len(plsong_queue) == 0:
             await message.channel.send("Playlist is empty")
             return
         else:
             vc = await GetVocalClient(client, channel, message)
             await message.channel.send("Playing playlist "+playlist_name)
-            while len(plsong_queue) > 0:
-                await message.channel.send("Playing "+fileNameFormatted(plsong_queue[0]))
-                await PlayUniqueSong(vc, plsong_queue[0])
+            while len(song_queue) > 0:
+                await message.channel.send("Playing "+fileNameFormatted(song_queue[0]))
+                await PlayUniqueSong(vc, song_queue[0])
                 plsong_queue.pop(0)
                 song_queue.pop(0)
                 PopSongFromQueueFile()
