@@ -344,7 +344,7 @@ async def HandleMessageEvent(message, song_queue):
                 song_queueFormatted += "Now Playing: "+fileNameFormatted(x)+"\n"
                 i += 1
                 continue
-            song_queueFormatted += str(i)+": " + x + "\n"
+            song_queueFormatted += str(i)+": " + fileNameFormatted(x) + "\n"
             i += 1
         if song_queueFormatted == "":
             song_queueFormatted = "Queue is empty"
