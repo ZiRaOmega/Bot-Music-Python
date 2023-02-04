@@ -740,7 +740,7 @@ async def HandleMessageEvent(message, song_queue):
             song = song_queue[song_number]
             song_queue.pop(song_number)
             song_queue.insert(position, song)
-            RewriteQueueFile()
+            RewriteQueueFile(song_queue)
             await message.channel.send("Song inserted at position "+str(position)+" : "+song)
             
 
