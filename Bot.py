@@ -717,6 +717,28 @@ async def HandleMessageEvent(message, song_queue):
         embedVar = discord.Embed(title=prompt, description=prompt, color=0x00ff00)
         embedVar.set_image(url=ImageUrl)
         await message.channel.send(embed=embedVar)
+    elif message.content.startswith("!insert "):
+        query = message.content[8:]
+        song_number = query.split(" ")[0]
+        position = query.split(" ")[1]
+        if not song_number.isdigit() or not position.isdigit():
+            await message.channel.send("Invalid song number or position type !queue to see the queue")
+            return
+        else:
+            song_number = int(song_number)
+            position = int(position)
+            if song_number >= len(song_queue) or position >= len(song_queue):
+                await message.channel.send("Invalid song number or position type !queue to see the queue")
+                return
+            elif song_number == 0 or position == 0:
+                await message.channel.send("Can't insert at position 0 or can't move the song currently playing")
+                return
+            song = song_queue[song_number]
+            song_queue.pop(song_number)
+            song_queue.insert(position, song)
+            RewriteQueueFile()
+            await message.channel.send("Song inserted at position "+str(position)+" : "+song)
+            
 
 
 async def PlayUniqueSong(vc, song_name):
