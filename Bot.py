@@ -358,6 +358,7 @@ async def HandleMessageEvent(message, song_queue):
                     await message.channel.send(':fast_forward: Skipped')
                 elif len(song_queue) > 0:
                     song_queue.pop(0)
+                    await message.channel.send(':fast_forward: Skipped')
                 break
         if len(song_queue) == 0:
             await x.disconnect()
