@@ -594,6 +594,12 @@ async def HandleMessageEvent(message, song_queue):
         playlist_name = message.content[4:]
         plsong_queue = StartPlaylist(playlist_name)
         if len(song_queue)>0:
+            vc = await GetVocalClient(client, channel, message)
+            if vc.is_playing():
+                await message.channel.send("Playlist added to queue")
+                return
+            else:
+                vc.resume()
             return
         if len(plsong_queue) == 0:
             await message.channel.send("Playlist is empty")
