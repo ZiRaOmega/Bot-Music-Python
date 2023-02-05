@@ -292,12 +292,9 @@ async def HandleMessageEvent(message, song_queue):
             if os.path.exists(file_name):
                 if len(song_queue) > 0:
                     # if bot not connected to voice channel
-                    vc = GetVocalClient(client, channel, message)
+                    #vc = GetVocalClient(client, channel, message)
                     if not client.voice_clients:
                         vc = await channel.connect()
-                    elif vc._is_connected() and not vc.is_playing():
-                        await play_song(vc, message, url, channel)
-                        return
                     else:
                         await message.channel.send(":heavy_plus_sign: "+url+' Added to queue')
                         return
