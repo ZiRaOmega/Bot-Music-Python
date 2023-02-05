@@ -748,6 +748,8 @@ async def HandleMessageEvent(message, song_queue):
             song_queue.insert(position, song)
             RewriteQueueFile(song_queue)
             await message.channel.send("Song inserted at position "+str(position)+" : "+song)
+    elif message.content==("!quit"):
+        exit()
             
 
 
