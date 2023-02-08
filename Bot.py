@@ -569,7 +569,7 @@ async def HandleMessageEvent(message, song_queue):
         # restart the bot
         await message.channel.send(":repeat: Restarting...")
         # os.system("bash restart.sh") using subprocess
-        subprocess.Popen(["bash", "restart.sh"])
+        subprocess.Popen(["bash", "StartBot.sh"])
         exit()
     elif message.content.startswith('!createpl'):
         playlist_name = message.content[10:]
