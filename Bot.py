@@ -68,6 +68,7 @@ def WriteSongToQueueFile(SongName):
     file.close()
 def ReadQueueFile():
     global song_queue
+    #
     # Read the queue from the file
     file = open("queue.txt", "r")
     lines = file.readlines()
