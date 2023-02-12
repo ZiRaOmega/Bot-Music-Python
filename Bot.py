@@ -56,8 +56,12 @@ async def on_message(message):
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
     CreateQueueFile()
-    CHANNEL_ID = int(GetChannelID())
-    channel=client.get_channel(CHANNEL_ID)
+    channel=None
+    try:
+        CHANNEL_ID = int(GetChannelID())
+        channel = client.get_channel(CHANNEL_ID)
+    except: 
+        pass
     if channel is None:
         print("Channel not found")
     else:
