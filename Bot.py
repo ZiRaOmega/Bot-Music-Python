@@ -56,12 +56,18 @@ async def on_message(message):
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
     CreateQueueFile()
+    CHANNEL_ID = int(GetChannelID())
+    channel=client.get_channel(CHANNEL_ID)
+    if channel is None:
+        print("Channel not found")
+    else:
+        await channel.send(":green_circle: Bot is online")
     #ReadQueueFile()
     await DefaultStatus()
 
 
 async def DefaultStatus():
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help; Create a Channel named 'commands' to use the bot"))
 
 
 async def ChangeStatus(music_name):
@@ -175,8 +181,9 @@ async def HandleMessageEvent(message, song_queue):
     global CurrentSong
     global mapsongurl
     channel = None
-    if message.author == client.user:
+    if message.author == client.user or message.channel.name != "commands":
         return
+    SetChannelID(str(message.channel.id))
     if message.author.voice is not None:
         # await message.channel.send('You are not in a voice channel')
         channel = message.author.voice.channel
@@ -324,7 +331,7 @@ async def HandleMessageEvent(message, song_queue):
             await x.disconnect()
         song_queue.clear()
     elif message.content.startswith('!help'):
-        await message.channel.send("Commands:\n!play or !p [url] - Plays the song from the url\n!stop or !s - Stops the bot and clears the queue\n!download or !d [url] - Downloads the song from the url\n!queue or !q - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!reset - Resets the bot\n!help - Shows this message\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!alredydl - Prints all files already downloaded\n!volume - Change volume (Need to be between 0 and 1 like 0.5)\n!insert 'song position' 'position to insert' - insert a song currently in queue to position given \nAdditional commands: !status, !changestatus, !defaultstatus, !ping, !move, !leave,  !creator, !invite, !joke, !random, !resetstatus, !rickroll, !restart, !createpl, !addtopl, !pl, !rmpl, !readpl, !deletesong, !join, !playforce, !repeat")
+        await message.channel.send("Create a Channel named 'commands' to use the bot\n\nCommands:\n!play or !p [url] - Plays the song from the url\n!stop or !s - Stops the bot and clears the queue\n!download or !d [url] - Downloads the song from the url\n!queue or !q - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!reset - Resets the bot\n!help - Shows this message\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!alredydl - Prints all files already downloaded\n!volume - Change volume (Need to be between 0 and 1 like 0.5)\n!insert 'song position' 'position to insert' - insert a song currently in queue to position given \nAdditional commands: !status, !changestatus, !defaultstatus, !ping, !move, !leave,  !creator, !invite, !joke, !random, !resetstatus, !rickroll, !restart, !createpl, !addtopl, !pl, !rmpl, !readpl, !deletesong, !join, !playforce, !repeat")
     elif message.content.startswith('!remove'):
         songToRemove = message.content[8:]
         if songToRemove in song_queue:

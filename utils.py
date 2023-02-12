@@ -136,3 +136,12 @@ def TokenStartCheck(openai, TOKEN):
         if TOKEN is None:
             print("No Discord token found use export DISCORD_TOKEN='your_token'")
         exit()
+def SetChannelID(channel_id):
+    file = open("channel_id.txt", "w")
+    file.write(channel_id)
+    file.close()
+def GetChannelID():
+    file = open("channel_id.txt", "r")
+    channel_id = file.read()
+    file.close()
+    return channel_id
