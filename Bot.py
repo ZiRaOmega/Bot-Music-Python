@@ -73,10 +73,13 @@ def ReadQueueFile():
     file = open("queue.txt", "r")
     lines = file.readlines()
     file.close()
+    if len(lines) == 0:
+        return False
     for line in lines:
         song_queue.append(line.strip())
         global mapsongurl
         mapsongurl[line.strip()] = line.strip()
+    return True
 def PopSongFromQueueFile():
     # Remove the first song from the queue
     file = open("queue.txt", "r")
@@ -752,8 +755,10 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content==("!quit"):
         exit()
     elif message.content=="!oldqueue":
-        ReadQueueFile()
-        await message.channel.send("Queue loaded")
+        if ReadQueueFile():
+            await message.channel.send("Queue loaded")
+        else:
+            await message.channel.send("Old queue is empty")
             
 
 
