@@ -67,6 +67,7 @@ def WriteSongToQueueFile(SongName):
     file.write(SongName+"\n")
     file.close()
 def ReadQueueFile():
+    global song_queue
     # Read the queue from the file
     file = open("queue.txt", "r")
     lines = file.readlines()
@@ -101,7 +102,7 @@ async def on_message(message):
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
     CreateQueueFile()
-    ReadQueueFile()
+    #ReadQueueFile()
     await DefaultStatus()
 
 
@@ -749,6 +750,9 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Song inserted at position "+str(position)+" : "+song)
     elif message.content==("!quit"):
         exit()
+    elif message.content=="!oldqueue":
+        ReadQueueFile()
+        await message.channel.send("Queue loaded")
             
 
 
