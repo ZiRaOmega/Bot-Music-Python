@@ -533,9 +533,6 @@ async def HandleMessageEvent(message, song_queue):
             if vc.is_playing():
                 await message.channel.send("Playlist added to queue")
                 return
-            else:
-                vc.resume()
-            return
         if len(plsong_queue) == 0:
             await message.channel.send("Playlist is empty")
             return
@@ -693,6 +690,7 @@ async def HandleMessageEvent(message, song_queue):
             
 def StartPlaylist(playlist_name):
     plsong_queue = []
+    global song_queue
     # Open file like playlist_name_playlist.txt if not exist create it
     file = open(playlist_name+"_playlist.txt", "r")
     for line in file:
