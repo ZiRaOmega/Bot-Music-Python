@@ -13,6 +13,8 @@ import requests
 import urllib.parse
 import sys
 import openai
+from utils import * # import all functions from utils.py
+from z01 import * # import all functions from z01.py
 
 # Set up the model and prompt
 model_engine = "text-davinci-003"
@@ -50,52 +52,6 @@ ytdl_opts = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_opts)
 
-""" async def GetLyrics(song_name):
-    # Get the lyrics of the song using the genius api
-    lyrics_fetcher.set_access_token(os.environ.get('GENIUS_TOKEN'))
-    lyrics = lyrics_fetcher.get_lyrics(song_name)
-    return lyrics """
-# print(GetLyrics("The Weeknd - Blinding Lights"))
-def CreateQueueFile():
-    if not os.path.exists("queue.txt"):
-        # Create a file to store the queue
-        file = open("queue.txt", "w")
-        file.close()
-def WriteSongToQueueFile(SongName):
-    # Write the queue to the file
-    file = open("queue.txt", "a")
-    file.write(SongName+"\n")
-    file.close()
-def ReadQueueFile():
-    global song_queue
-    #
-    # Read the queue from the file
-    file = open("queue.txt", "r")
-    lines = file.readlines()
-    file.close()
-    if len(lines) == 0:
-        return False
-    for line in lines:
-        song_queue.append(line.strip())
-        global mapsongurl
-        mapsongurl[line.strip()] = line.strip()
-    return True
-def PopSongFromQueueFile():
-    # Remove the first song from the queue
-    file = open("queue.txt", "r")
-    lines = file.readlines()
-    file.close()
-    file = open("queue.txt", "w")
-    for line in lines[1:]:
-        file.write(line)
-    file.close()
-def RewriteQueueFile(song_queue):
-    #Remove all songs from the queuefile
-    file = open("queue.txt", "w")
-    file.truncate(0) #remove all content
-    for song in song_queue:
-        file.write(song+"\n")
-    file.close()
 
 @client.event
 async def on_message(message):
@@ -216,25 +172,6 @@ def STREAM_search_and_download_music(song_name):
         
     return url, ytb_title
 
-def fileNameFormatted(fileName):
-    fileName = fileName.replace("_", " ")
-    fileName = fileName.replace(".mp3", "")
-    fileName = fileName.replace(".webm", "")
-    fileName = fileName.replace(".m4a", "")
-    fileName = fileName.replace(".mp4", "")
-    fileName = fileName.replace(".wav", "")
-    fileName = fileName.replace(".ogg", "")
-    fileName = fileName.replace(".flac", "")
-    fileName = fileName.replace(".aac", "")
-    fileName = fileName.replace(".opus", "")
-    fileName = fileName.replace(".wma", "")
-    fileName = fileName.replace(".3gp", "")
-    fileName = fileName.replace(".mkv", "")
-    fileName = fileName.replace(".avi", "")
-    fileName = fileName.replace(".mov", "")
-    fileName = fileName.replace(".wmv", "")
-    fileName = fileName.replace(".flv", "")
-    return fileName
 
 
 CurrentSong = None
@@ -760,8 +697,34 @@ async def HandleMessageEvent(message, song_queue):
         else:
             await message.channel.send("Old queue is empty")
             
-
-
+def StartPlaylist(playlist_name):
+    plsong_queue = []
+    # Open file like playlist_name_playlist.txt if not exist create it
+    file = open(playlist_name+"_playlist.txt", "r")
+    for line in file:
+        print(line)
+        song_name = line.strip()  # remove \n
+        song_name, url = search_and_download_music(song_name)
+        song_queue.append(song_name)
+        global mapsongurl
+        mapsongurl[song_name]=song_name
+        plsong_queue.append(song_name)
+    file.close()
+    return plsong_queue
+def ReadQueueFile():
+    global song_queue
+    #
+    # Read the queue from the file
+    file = open("queue.txt", "r")
+    lines = file.readlines()
+    file.close()
+    if len(lines) == 0:
+        return False
+    for line in lines:
+        song_queue.append(line.strip())
+        global mapsongurl
+        mapsongurl[line.strip()] = line.strip()
+    return True
 async def PlayUniqueSong(vc, song_name):
     vc.play(discord.FFmpegPCMAudio(song_name))
     while vc.is_playing() or vc.is_paused():
@@ -778,82 +741,6 @@ async def GetVocalClient(client, channel, message):
                 vc = x
                 break
     return vc
-def CreatePlaylistFile(playlist_name):
-    # Create a file called playlist_name_playlist.txt if not exist
-    if not os.path.exists(playlist_name+"_playlist.txt"):
-        file = open(playlist_name+"_playlist.txt", "w")
-        file.close()
-def WritePlaylistFile(playlist_name, song_name):
-    # Open file like playlist_name_playlist.txt if not exist create it
-    file = open(playlist_name+"_playlist.txt", "a")
-    file.write(song_name+"\n")
-    file.close()
-def StartPlaylist(playlist_name):
-    plsong_queue = []
-    # Open file like playlist_name_playlist.txt if not exist create it
-    file = open(playlist_name+"_playlist.txt", "r")
-    for line in file:
-        print(line)
-        song_name = line.strip()  # remove \n
-        song_name, url = search_and_download_music(song_name)
-        song_queue.append(song_name)
-        global mapsongurl
-        mapsongurl[song_name]=song_name
-        plsong_queue.append(song_name)
-    file.close()
-    return plsong_queue
-def ListPlaylist():
-    # List all playlist
-    toSend = ""
-    i=0
-    for file in os.listdir():
-        if file.endswith("_playlist.txt"):
-            toSend += str(i)+": "+file[:-12]+"\n" #
-            i+=1
-    return toSend
-    
-def ReadPlaylistFile(playlist_name):
-    if not os.path.exists(playlist_name+"_playlist.txt"):
-        return "Playlist not found"
-    # Open file like playlist_name_playlist.txt if not exist create it
-    file = open(playlist_name+"_playlist.txt", "r")
-    toSend = playlist_name+":\n"
-    i = 0
-    for line in file:
-        if line != "":
-            toSend += str(i)+": "+line+"\n"
-            i += 1
-    file.close()
-    return toSend
-def RemovePlaylistFile(playlist_name):
-    # Remove file like playlist_name_playlist.txt
-    os.remove(playlist_name+"_playlist.txt")
-def CreateHistoryFile():
-    # Create a file called history.txt if not exist
-    if not os.path.exists("history.txt"):
-        file = open("history.txt", "w")
-        file.close()
-
-
-def WriteHistoryFile(userinput, username):
-    timeNow = datetime.datetime.now()
-    timeNowFormatted = timeNow.strftime("%d/%m/%Y %H:%M:%S")
-    # Write the userinput and username to history.txt
-    file = open("history.txt", "a")
-    file.write(username+" "+userinput+" "+timeNowFormatted+"\n")
-    file.close()
-
-
-async def ReadHistoryFile(message,opts):
-    # Read the history.txt file from the end and get the username and userinput each line like(username userinput)
-    i = 0
-    result = ""
-    for line in reversed(list(open("history.txt"))):
-        if i == opts:
-            break
-        i += 1
-        result+=str(i) + ": " + line+"\n"
-    await message.channel.send(result)
 
 async def PlaySong(song_name, channel, message):
     if not client.voice_clients:
@@ -870,16 +757,6 @@ async def PlaySong(song_name, channel, message):
     vc.stop()
     await vc.disconnect()
 
-
-def GetPassword(username):
-    # Read the ZONE01.txt file and get the username and password each line like(username password)
-    for line in open("ZONE01.txt"):
-        Credentials = line.split(" ")
-        Username = Credentials[0]
-        Password = Credentials[1]
-        if Username == username:
-            # if username is found return the password
-            return Password
 
 
 def StartBot(TOKEN):
@@ -917,83 +794,6 @@ async def JokefromReddit():
     # return the first post
     return toPrintJokes
 
-session = requests.Session()
-Pseudo01 = None
-Password01 = None
-ADMIN = None
-URL = "http://10.10.0.30/"
-URL = "http://localhost:3000/"
-
-
-def login(username=None):
-    password = GetPassword(username)
-    global Pseudo01  # global variable to be used in the function and outside the function
-    global Password01
-    global ADMIN
-    if Pseudo01 != None and Password01 != None and ADMIN == None:
-        ADMIN = "Connected"
-        Pseudo01 = None
-        Password01 = None
-        return session.get(URL+"sign_z01/PHP/sign.php?" + urllib.parse.urlencode({  # login to the website with the credentials in the ZONE01.txt file return is used to check if the login is successful and end the function
-            "pseudo": Pseudo01,
-            "password": Password01,
-            "submit": "Connexion",
-        })).status_code == 200, "You are now connected"
-    elif username != None and password != None:
-        pseudo01 = username
-        password01 = password
-        ADMIN = None
-        return session.get(URL+"sign_z01/PHP/sign.php?" + urllib.parse.urlencode({
-            "pseudo": pseudo01,
-            "password": password01,
-            "submit": "Connexion",
-        })).status_code == 200, "You are now connected"
-    elif username == None or password == None:
-        return "Error", "Please ask an admin to add your credentials in the ZONE01.txt file"
-
-
-def SwitchDoor(PushTRUEorPullFALSE):  # Enter (alias Push) or Exit (alias Pull)
-    # switch PushTRUEorPullFALSE to 1 or 0
-    # ping 10.10.0.30 if down return
-    ping = os.system("ping -c 1 10.10.0.30")
-    if PushTRUEorPullFALSE == "ENTER":
-        if ping != 0:
-            return "Door is locked"
-        else:
-            EnterFuck01()
-    elif PushTRUEorPullFALSE == "EXIT":
-        if ping != 0:
-            print()
-        else:
-            ExitLove01()
-
-
-def logout():
-    session.get(URL+"sign_z01/PHP/deco.php")
-
-
-def EnterFuck01():
-    if not login():
-        sys.exit(1)
-    print("Enter...")
-    session.get(URL+"sign_z01/PHP/enter.php")
-    logout()
-
-
-def ExitLove01():
-    if not login():
-        return "Error", "Please ask an admin to add your credentials in the ZONE01.txt file"
-    print("Exit...")
-    session.get(URL+"sign_z01/PHP/exit.php")
-    logout()
-    return "Success", "You have left the zone"
-
-
-def ExportedCredentials___():
-    if Pseudo01 == None or Password01 == None:
-        return False
-    else:
-        return True
 
 
 StartBot(TOKEN)
