@@ -27,13 +27,7 @@ song_queue = []
 mapsongurl = {}
 REPEAT = False
 SEEK = "0:00"
-if TOKEN is None:
-    print("No token found use export DISCORD_TOKEN='your_token'")
-    exit()
-if openai.api_key is None:
-    print("No OPENAI token found use export OPENAI_TOKEN='your_token'")
-    exit()
-
+TokenStartCheck(openai,TOKEN)
 client = discord.Client(intents=discord.Intents.all())
 
 ytdl_opts = {

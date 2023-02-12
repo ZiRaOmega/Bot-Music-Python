@@ -125,3 +125,14 @@ def fileNameFormatted(fileName):
     fileName = fileName.replace(".wmv", "")
     fileName = fileName.replace(".flv", "")
     return fileName
+def TokenStartCheck(openai, TOKEN):
+    if TOKEN is None:
+        print("No Discord token found use export DISCORD_TOKEN='your_token'")
+        if openai.api_key is None:
+            print("No OPENAI token found use export OPENAI_TOKEN='your_token'")
+        exit()
+    if openai.api_key is None:
+        print("No OPENAI token found use export OPENAI_TOKEN='your_token'")
+        if TOKEN is None:
+            print("No Discord token found use export DISCORD_TOKEN='your_token'")
+        exit()
