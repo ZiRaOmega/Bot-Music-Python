@@ -730,6 +730,8 @@ def ReadQueueFile():
     return True
 async def PlayUniqueSong(vc, song_name):
     vc.play(discord.FFmpegPCMAudio(song_name))
+    vc.source = discord.PCMVolumeTransformer(vc.source)
+    vc.source.volume = 0.1
     while vc.is_playing() or vc.is_paused():
         await asyncio.sleep(1)
     vc.stop()
@@ -754,6 +756,8 @@ async def PlaySong(song_name, channel, message):
                 vc = x
                 break
     vc.play(discord.FFmpegPCMAudio(song_name))
+    vc.source = discord.PCMVolumeTransformer(vc.source)
+    vc.source.volume = 0.1
     while vc.is_playing():
         await asyncio.sleep(1)
     # song finished
