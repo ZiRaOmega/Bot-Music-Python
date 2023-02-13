@@ -291,9 +291,13 @@ async def HandleMessageEvent(message, song_queue):
                 continue
             song_queueFormatted += str(i)+": " + fileNameFormatted(x) + "\n"
             i += 1
+            if i%20==0:
+                await message.channel.send(song_queueFormatted)
+                song_queueFormatted = song_queueFormatted[:-1]
+                
         if song_queueFormatted == "":
             song_queueFormatted = "Queue is empty"
-        await message.channel.send(song_queueFormatted)
+            await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
         
         for x in client.voice_clients:
