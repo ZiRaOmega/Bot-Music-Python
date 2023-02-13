@@ -571,10 +571,16 @@ async def HandleMessageEvent(message, song_queue):
             await play_song(vc, message, song_queue[0], channel)
             await message.channel.send("Playlist Ended")
     elif message.content.startswith('!rmpl'):
+
         playlist_name = message.content[6:]
         # Remove file like playlist_name_playlist.txt
         RemovePlaylistFile(playlist_name)
         await message.channel.send("Playlist removed")
+    elif message.content.startswith('!rmfrompl'):
+        playlist_name = message.content.split(" ")[1]
+        song_position = message.content.split(" ")[2]
+        RemoveSongFromPlaylistFile(playlist_name, song_position)
+        await message.channel.send("Song removed from playlist"+playlist_name+" at position "+song_position)
     elif message.content == ('!pllist'):
         # List all playlist
         toSend=ListPlaylist()

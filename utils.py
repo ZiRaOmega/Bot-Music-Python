@@ -75,6 +75,20 @@ def ReadPlaylistFile(playlist_name):
 def RemovePlaylistFile(playlist_name):
     # Remove file like playlist_name_playlist.txt
     os.remove(playlist_name+"_playlist.txt")
+def RemoveSongFromPlaylistFile(playlist_name, song_position):
+    # Remove song from playlist
+    file = open(playlist_name+"_playlist.txt", "r")
+    lines = file.readlines()
+    file.close()
+    file = open(playlist_name+"_playlist.txt", "w")
+    i = 0
+    for line in lines:
+        if line == "":
+            continue
+        if i != int(song_position):
+            file.write(line)
+        i += 1
+    file.close()
 ############################################################################################################
 
 #History functions
