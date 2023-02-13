@@ -296,7 +296,7 @@ async def HandleMessageEvent(message, song_queue):
                 song_queueFormatted = ""
                 
         if song_queueFormatted == "" and i==0:
-            await message.channel.send(song_queueFormatted)
+            await message.channel.send(":negative_squared_cross_mark: Queue is empty")
         elif song_queueFormatted != "":
             await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
