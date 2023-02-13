@@ -466,8 +466,8 @@ async def HandleMessageEvent(message, song_queue):
         if message.author.voice:
             if not client.voice_clients:
                 vc = await channel.connect()
-            file_name, url = await DownloadVideo("rick astley never gonna give you up")
-            await PlaySong(file_name, channel, message)
+            file_name, url = await search_and_download_music("never gonna give you up")
+            await PlayUniqueSong(vc,file_name)
         else:
             rickLyrics = "Never gonna give you up\nNever gonna let you down\nNever gonna run around and desert you\nNever gonna make you cry\nNever gonna say goodbye\nNever gonna tell a lie and hurt you"
             await message.channel.send(rickLyrics)
@@ -694,7 +694,6 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content==("!quit"):
         exit()
     elif message.content=="!oldqueue":
-        
         if ReadQueueFile():
             RewriteQueueFile([])
             await message.channel.send("Queue loaded")
