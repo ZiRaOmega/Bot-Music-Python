@@ -472,6 +472,7 @@ async def HandleMessageEvent(message, song_queue):
                 await asyncio.sleep(0.1)
             await message.channel.send("Syncing " + str((10*10))+ "%")
             await message.channel.send("Hacking01 " + username + " complete")
+            await asyncio.sleep(0.2)
         await message.channel.send("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
         # if sender is connected to voice channel
         if message.author.voice:
