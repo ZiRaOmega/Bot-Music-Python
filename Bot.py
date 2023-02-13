@@ -461,11 +461,13 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content.startswith('!resetstatus'):
         await DefaultStatus()
     elif message.content.startswith('!rickroll') or message.content=='!hack01' or message.content.startswith('!hack01 '):
+        message.delete()
         if message.content.startswith('!hack01 '):
             username = message.content[8:]
             await message.channel.send("Hacking01 " + username)
             for i in range(0, 10):
-                await message.channel.send("Syncing " + str(i*10) + "%")
+                rand= random.randint(0, 100)
+                await message.channel.send("Syncing " + str(i*10)+","+rand + "%")
                 await asyncio.sleep(0.1)
             await message.channel.send("Hacking01 " + username + " complete")
         await message.channel.send("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
