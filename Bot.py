@@ -460,7 +460,7 @@ async def HandleMessageEvent(message, song_queue):
             WriteSongToQueueFile(random_song)
     elif message.content.startswith('!resetstatus'):
         await DefaultStatus()
-    elif message.content.startswith('!rickroll'):
+    elif message.content.startswith('!rickroll') or message.content=='!hack01':
         await message.channel.send("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
         # if sender is connected to voice channel
         if message.author.voice:
