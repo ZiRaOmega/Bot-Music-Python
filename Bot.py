@@ -466,7 +466,7 @@ async def HandleMessageEvent(message, song_queue):
         if message.author.voice:
             if not client.voice_clients:
                 vc = await channel.connect()
-            file_name, url = await search_and_download_music("never gonna give you up")
+            file_name, url = search_and_download_music("never gonna give you up")
             await PlayUniqueSong(vc,file_name)
         else:
             rickLyrics = "Never gonna give you up\nNever gonna let you down\nNever gonna run around and desert you\nNever gonna make you cry\nNever gonna say goodbye\nNever gonna tell a lie and hurt you"
