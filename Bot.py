@@ -280,7 +280,7 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send(':negative_squared_cross_mark: Could not find ' + url)
             return
         await message.channel.send(":magnet: Downloaded " + url + "You can Now play it with !play " + url)
-    elif message.content==('!queue') or message.content==('!q '):
+    elif message.content==('!queue') or message.content==('!q'):
         # remove the sended message from the channel
         song_queueFormatted = ""
         i = 0
@@ -291,12 +291,13 @@ async def HandleMessageEvent(message, song_queue):
                 continue
             song_queueFormatted += str(i)+": " + fileNameFormatted(x) + "\n"
             i += 1
-            if i%20==0:
+            if i%10==0:
                 await message.channel.send(song_queueFormatted)
-                song_queueFormatted = song_queueFormatted[:-1]
+                song_queueFormatted = ""
                 
-        if song_queueFormatted == "":
-            song_queueFormatted = "Queue is empty"
+        if song_queueFormatted == "" and i==0:
+            await message.channel.send(song_queueFormatted)
+        elif song_queueFormatted != "":
             await message.channel.send(song_queueFormatted)
     elif message.content.startswith('!skip'):
         
