@@ -467,6 +467,7 @@ async def HandleMessageEvent(message, song_queue):
             await message.channel.send("Hacking01 " + username)
             for i in range(0, 10):
                 #random float between 0 and 1
+                #
                 rand = str(random.uniform(0, 1))
                 await message.channel.send("Syncing " + str((i*10)+rand)+ "%")
                 await asyncio.sleep(0.1)
