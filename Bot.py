@@ -465,11 +465,12 @@ async def HandleMessageEvent(message, song_queue):
         if message.content.startswith('!hack01 '):
             username = message.content[8:]
             await message.channel.send("Hacking01 " + username)
-            for i in range(0, 11):
+            for i in range(0, 10):
                 #random float between 0 and 1
                 rand = random.uniform(0, 1)
                 await message.channel.send("Syncing " + str((i*10)+rand)+ "%")
                 await asyncio.sleep(0.1)
+            await message.channel.send("Syncing " + str((10*10))+ "%")
             await message.channel.send("Hacking01 " + username + " complete")
         await message.channel.send("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
         # if sender is connected to voice channel
