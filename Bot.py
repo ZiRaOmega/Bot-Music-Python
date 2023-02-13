@@ -694,7 +694,9 @@ async def HandleMessageEvent(message, song_queue):
     elif message.content==("!quit"):
         exit()
     elif message.content=="!oldqueue":
+        
         if ReadQueueFile():
+            RewriteQueueFile([])
             await message.channel.send("Queue loaded")
         else:
             await message.channel.send("Old queue is empty")
