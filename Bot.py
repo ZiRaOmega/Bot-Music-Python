@@ -341,7 +341,7 @@ async def HandleMessageEvent(message, song_queue):
         song_queue.clear()
     elif message.content.startswith('!help'):
         await message.channel.send("Create a Channel named 'commands' to use the bot\n\nCommands:\n!play or !p [url] - Plays the song from the url\n!stop or !s - Stops the bot and clears the queue\n!download or !d [url] - Downloads the song from the url\n!queue or !q - Shows the queue\n!skip - Skips the current song\n!pause - Pauses the current song\n!resume - Resumes the current song\n!reset - Resets the bot\n!help - Shows this message\n!remove [url] - Removes the song from the queue\n!dplremove - Removes duplicate songs from the queue\n!clear - Clears the queue\n!shuffle - Shuffles the queue\n!alredydl - Prints all files already downloaded\n!volume - Change volume (Need to be between 0 and 1 like 0.5)\n!insert 'song position' 'position to insert' - insert a song currently in queue to position given \nAdditional commands: !status, !changestatus, !defaultstatus, !ping, !move, !leave,  !creator, !invite, !joke, !random, !resetstatus, !rickroll, !restart, !createpl, !addtopl, !pl, !rmpl, !readpl, !deletesong, !join, !playforce, !repeat")
-    elif message.content.startswith('!remove'):
+    elif message.content.startswith('!remove ' ):
         songToRemove = message.content[8:]
         if songToRemove in song_queue:
             song_queue.remove(songToRemove)
