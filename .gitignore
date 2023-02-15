@@ -6,4 +6,5 @@ StartBot.sh
 *.json
 joke.py
 *.txt
+!requirements.txt
 node_modules/
